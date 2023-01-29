@@ -1,0 +1,18 @@
+trigger:
+- main
+
+pool: Default
+
+steps:
+
+- script: |
+    ./mvnw package
+  displayName: 'Build JAR'
+
+- script: docker build -t kylerjacobson.dev .
+  displayName: 'Build Docker Image'
+
+- script: |
+    docker login kyler.azurecr.io -u $(acr-user) -p $(acr-pass)
+    docker tag springio/gs-spring-boot-docker kylers.azurecr.io/kylerjacobson.dev
+    docker push kylers.azurecr.io/kylerjacobson.dev:latest
