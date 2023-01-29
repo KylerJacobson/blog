@@ -14,5 +14,5 @@ steps:
 
 - script: |
     docker login kyler.azurecr.io -u $(acr-user) -p $(acr-pass)
-    docker tag kylerjacobson.dev kylers.azurecr.io/kylerjacobson.dev
-    docker push kylers.azurecr.io/kylerjacobson.dev:latest
+    docker tag kylerjacobson.dev kyler.azurecr.io/kylerjacobson.dev
+    docker push kyler.azurecr.io/kylerjacobson.dev:latest
