@@ -17,12 +17,12 @@ steps:
     docker tag kylerjacobson.dev kyler.azurecr.io/kylerjacobson.dev
     docker push kyler.azurecr.io/kylerjacobson.dev:latest
 
-  - task: AzureRmWebAppDeployment@4
-    inputs:
-      ConnectionType: 'AzureRM'
-      azureSubscription: 'Azure subscription 1(25f35ce9-105c-402c-9425-b7513766da47)'
-      appType: 'webAppContainer'
-      WebAppName: 'kylersblog'
-      DockerNamespace: 'kyler.azurecr.io'
-      DockerRepository: 'kylerjacobson.dev'
-      DockerImageTag: 'latest'
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Azure subscription 1(25f35ce9-105c-402c-9425-b7513766da47)'
+    appType: 'webAppContainer'
+    WebAppName: 'kylersblog'
+    DockerNamespace: 'kyler.azurecr.io'
+    DockerRepository: 'kylerjacobson.dev'
+    DockerImageTag: 'latest'
