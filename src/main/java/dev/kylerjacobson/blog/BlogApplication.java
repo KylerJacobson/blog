@@ -11,7 +11,7 @@ public class BlogApplication {
 
 	@RequestMapping("/")
 	public String home() {
-		return "My Blog from Azure Pipelines";
+		return "My Blog from Azure Pipeline";
 	}
 
 	public static void main(String[] args) {
