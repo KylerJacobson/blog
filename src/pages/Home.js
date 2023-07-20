@@ -1,11 +1,9 @@
 import React from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import "./Home.css";
 
 function Home() {
     return (
-        <div className="main">
+        <div className="home">
             <h1>Home</h1>
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
