@@ -1,8 +1,12 @@
+version: "3.8"
+
 services:
-    app:
-        container_name: blog-container
-        image: blog-image
+    react-frontend:
+        container_name: react-frontend
         build:
             context: .
         ports:
-            - 8080:80
+            - 8080:3000
+        volumes:
+            - ./src:/app/src
+            - /app/node_modules
