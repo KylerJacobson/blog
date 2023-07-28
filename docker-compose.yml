@@ -8,5 +8,5 @@ services:
         ports:
             - 8080:3000
         volumes:
-            - ./src:/app/src
-            - /app/node_modules
+            - ./src:${WEBAPP_STORAGE_HOME}/app/src
+            - ${WEBAPP_STORAGE_HOME}/app/node_modules
