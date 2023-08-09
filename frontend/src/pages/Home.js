@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./Home.css";
 
 function Home() {
+    const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        fetch("/api/hello")
+            .then((res) => res.json())
+            .then((res) => setMessage(res.message));
+    }, []);
+
     return (
         <div className="home">
             <h1>Home</h1>
+            <p>{message}</p>
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
                 eiusmod tempor incididunt ut labore et dolore magna aliqua. Sit

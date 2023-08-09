@@ -1,6 +1,17 @@
-FROM node:20-alpine as development
+# Frontend
+FROM node:latest AS build
 WORKDIR /app
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm install
-COPY . .
-CMD npm start
+COPY frontend/ ./
+RUN npm run build
+
+# Backend
+FROM node:latest
+WORKDIR /server
+COPY server/package*.json ./
+RUN npm install
+COPY --from=build /app/build /server/public
+COPY server/ ./
+EXPOSE 8080
+CMD ["npm", "run", "start"]
