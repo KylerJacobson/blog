@@ -1,12 +1,13 @@
 import React from "react";
+import AccountCreationForm from "../components/AccountCreationForm";
 
 function CreateAccount() {
     return (
         <div className="main">
-            <h1>Create Account</h1>
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            </p>
+            <h1 className="text-4xl font-bold text-center mt-10">
+                Create Account
+            </h1>
+            <AccountCreationForm />
         </div>
     );
 }

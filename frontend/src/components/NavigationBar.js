@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import "./NavigationBar.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
 
 function NavigationBar() {
     const [loggedIn, setLoggedIn] = useState(false);
 
+    const navigate = useNavigate();
+
     function handleClick() {
         setLoggedIn(!loggedIn);
+        navigate("/createAccount");
     }
 
     return (
@@ -25,11 +28,8 @@ function NavigationBar() {
                         </Nav.Link>
                     </Nav>
                     <Nav className="justify-content-end">
-                        <Nav.Link as={Link} to={"/createAccount"}>
-                            {loggedIn ? "Logged in" : "Please Log in"}{" "}
-                        </Nav.Link>
                         <Button variant="outline-primary" onClick={handleClick}>
-                            Login
+                            Log In
                         </Button>
                     </Nav>
                 </Navbar.Collapse>
