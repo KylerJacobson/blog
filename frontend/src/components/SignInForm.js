@@ -1,20 +1,30 @@
 import React, { useState } from "react";
 
-const AccountCreationForm = () => {
+const SignInForm = () => {
     const [formData, setFormData] = useState({
-        username: "",
         email: "",
         password: "",
-        confirmPassword: "",
     });
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevState) => ({ ...prevState, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert("submitted");
+        try {
+            const response = await fetch("/api/signIn", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+            const data = await response.json();
+            localStorage.setItem("jwtToken", data.token);
+        } catch (error) {
+            console.error("There was an error submitting the form", error);
+        }
     };
 
     return (
@@ -22,12 +32,12 @@ const AccountCreationForm = () => {
             <div className="w-full p-6 m-auto bg-white rounded-md ring-2 shadow-md shadow-slate-600/80 ring-slate-600 lg:max-w-xl">
                 <form onSubmit={handleSubmit}>
                     <div>
-                        <label className="mt">Username:</label>
+                        <label className="mt">Email:</label>
                         <input
                             className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
                             type="text"
-                            name="username"
-                            value={formData.username}
+                            name="email"
+                            value={formData.email}
                             onChange={handleChange}
                         />
                     </div>
@@ -55,4 +65,4 @@ const AccountCreationForm = () => {
     );
 };
 
-export default AccountCreationForm;
+export default SignInForm;

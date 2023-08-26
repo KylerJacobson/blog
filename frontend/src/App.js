@@ -18,7 +18,7 @@ function App() {
                 <Route path="/createAccount" element={<SharedLayout />}>
                     <Route index element={<CreateAccount />} />
                 </Route>
-                <Route path="/signin" element={<SharedLayout />}>
+                <Route path="/signIn" element={<SharedLayout />}>
                     <Route index element={<SignIn />} />
                 </Route>
                 <Route path="*" element={<h1>404 Not Found</h1>} />
