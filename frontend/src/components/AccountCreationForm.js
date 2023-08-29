@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import "./form.css";
 
 const AccountCreationForm = () => {
     const [passwordMatch, setPasswordMatch] = useState(true);
@@ -15,46 +16,36 @@ const AccountCreationForm = () => {
     const userPassword = watch("password");
     const userConfirmPassword = watch("confirmPassword");
 
-    // console.log(errors);
-    // const handleChange = (e) => {
-    //     const { name, value } = e.target;
-    //     setFormData((prevState) => ({ ...prevState, [name]: value }));
-    // };
+    useEffect(() => {
+        if (userPassword !== userConfirmPassword) {
+            console.log("Passwords don't match");
+            setPasswordMatch(false);
+        } else {
+            setPasswordMatch(true);
+        }
+    }, [userPassword, userConfirmPassword]);
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     if (formData.password.length < 6) {
-    //         console.log("Password must be more than 6 characters");
-    //         return;
-    //     }
-    //     try {
-    //         const response = await fetch("/api/accountCreation", {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify(formData),
-    //         });
-    //         const data = await response;
-    //         console.log(data);
-    //     } catch (error) {
-    //         console.error("There was an error submitting the form", error);
-    //     }
-    // };
-
+    const createAccount = async (data) => {
+        try {
+            const response = await fetch("/api/accountCreation", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+            const result = await response;
+            console.log(result);
+        } catch (error) {
+            console.error("There was an error submitting the form", error);
+        }
+    };
     return (
         <div className="min-h-screen mt-10">
             <div className="w-full p-6 m-auto bg-white rounded-md ring-2 shadow-md shadow-slate-600/80 ring-slate-600 lg:max-w-xl">
                 <form
                     onSubmit={handleSubmit((data) => {
-                        console.log(userPassword);
-                        console.log(userConfirmPassword);
-                        if (userPassword !== userConfirmPassword) {
-                            console.log("Passwords don't match");
-                            setPasswordMatch(false);
-                        }
-                        console.log(data);
-                        console.log(errors);
+                        createAccount(data);
                     })}
                 >
                     <div>
@@ -124,6 +115,9 @@ const AccountCreationForm = () => {
                                 minLength: 6,
                             })}
                         />
+                        {errors.password?.type === "required" && (
+                            <p className="errorMsg">Password is required</p>
+                        )}
                         {errors.password?.type === "minLength" && (
                             <p className="errorMsg">
                                 Password must be at least 6 characters
@@ -138,6 +132,9 @@ const AccountCreationForm = () => {
                             name="confirmPassword"
                             {...register("confirmPassword")}
                         />
+                        {errors.password?.type === "required" && (
+                            <p className="errorMsg">Password is required</p>
+                        )}
                         {passwordMatch === false && (
                             <p className="errorMsg">
                                 Passwords don't match {passwordMatch}
