@@ -6,7 +6,6 @@ const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const { expressjwt: ejwt } = require("express-jwt");
 const UserDao = require("../server/models/userDao");
-
 const JWT_SECRET = process.env.JWTSecret;
 const port = process.env.PORT || 8080;
 
@@ -36,18 +35,19 @@ app.post("/api/accountCreation", async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     try {
         let user = await UserDao.getUserByEmail(email);
-        if (!user) {
+        console.log("user return: ", user);
+        if (user) {
             return res.status(401).json("User already exists");
+        } else {
+            let newUser = await UserDao.createUser(
+                firstName,
+                lastName,
+                email,
+                password
+            );
+            console.log("newUser: ", newUser);
+            res.status(200).send("Account successfully created");
         }
-
-        let newUser = await UserDao.createUser(
-            firstName,
-            lastName,
-            email,
-            password
-        );
-
-        res.status(200).send("Account successfully created");
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -69,7 +69,7 @@ app.post("/api/signIn", async (req, res) => {
         }
     } catch (err) {
         console.error(err.message);
-        res.status(500).send("Server Error");
+        res.status(500).json("Server Error");
     }
 });
 

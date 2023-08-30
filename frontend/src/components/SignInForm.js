@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import "./form.css";
 
 const SignInForm = () => {
     const [validLogin, setValidLogin] = useState();
+    const navigate = useNavigate();
 
     const {
         register,
@@ -26,6 +28,7 @@ const SignInForm = () => {
             } else {
                 setValidLogin(true);
                 localStorage.setItem("jwtToken", result.token);
+                navigate("/");
             }
         } catch (error) {
             console.error("There was an error submitting the form", error);

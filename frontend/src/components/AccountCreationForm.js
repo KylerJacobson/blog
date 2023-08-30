@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import "./form.css";
 
 const AccountCreationForm = () => {
     const [passwordMatch, setPasswordMatch] = useState(true);
+    const [accountExists, setAccountExists] = useState(false);
+    const navigate = useNavigate();
 
     const {
         register,
@@ -34,6 +36,12 @@ const AccountCreationForm = () => {
                 body: JSON.stringify(data),
             });
             const result = await response;
+            if (result.status === 200) {
+                navigate("/");
+            }
+            if (result.status === 401) {
+                setAccountExists(true);
+            }
         } catch (error) {
             console.error("There was an error submitting the form", error);
         }
@@ -98,8 +106,10 @@ const AccountCreationForm = () => {
                         {errors.email?.type === "required" && (
                             <p className="errorMsg">Email is required.</p>
                         )}
-                        {errors.email && (
-                            <p className="errorMsg">{errors.email.message}</p>
+                        {accountExists && (
+                            <p className="errorMsg">
+                                An account with this email already exists!
+                            </p>
                         )}
                     </div>
                     <div>
