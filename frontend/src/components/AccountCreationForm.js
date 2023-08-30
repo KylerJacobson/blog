@@ -18,7 +18,6 @@ const AccountCreationForm = () => {
 
     useEffect(() => {
         if (userPassword !== userConfirmPassword) {
-            console.log("Passwords don't match");
             setPasswordMatch(false);
         } else {
             setPasswordMatch(true);
@@ -35,7 +34,6 @@ const AccountCreationForm = () => {
                 body: JSON.stringify(data),
             });
             const result = await response;
-            console.log(result);
         } catch (error) {
             console.error("There was an error submitting the form", error);
         }

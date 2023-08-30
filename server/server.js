@@ -49,7 +49,6 @@ app.post("/api/accountCreation", async (req, res) => {
 
         res.status(200).send("Account successfully created");
     } catch (error) {
-        console.log(error);
         res.status(500).send(error.message);
     }
 });
