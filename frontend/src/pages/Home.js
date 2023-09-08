@@ -1,18 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import "./Home.css";
+import { AuthContext } from "../contexts/AuthContext";
 
 function Home() {
     const [message, setMessage] = useState("");
-
-    useEffect(() => {
-        fetch("/api/hello")
-            .then((res) => res.json())
-            .then((res) => setMessage(res.message));
-    }, []);
+    const currentUser = useContext(AuthContext);
 
     return (
         <div className="home">
-            <h1>Home</h1>
+            <h1>Hello {currentUser && currentUser?.currentUser?.firstName}</h1>
             <p>{message}</p>
 
             <p>
@@ -50,21 +46,22 @@ function Home() {
             <br />
             <p>
                 Tempus iaculis urna id volutpat lacus. Rhoncus est pellentesque
-                elit ullamcorper dignissim cras. Pretium aenean pharetra magna
-                ac placerat vestibulum lectus mauris. Nec feugiat in fermentum
-                posuere urna nec tincidunt. Praesent elementum facilisis leo vel
-                fringilla est. Convallis posuere morbi leo urna molestie at
-                elementum eu facilisis. Enim diam vulputate ut pharetra sit amet
-                aliquam. Dui nunc mattis enim ut tellus elementum sagittis vitae
-                et. Nascetur ridiculus mus mauris vitae ultricies. Dolor sit
-                amet consectetur adipiscing elit ut aliquam purus. Odio ut enim
-                blandit volutpat maecenas volutpat blandit. Eget aliquet nibh
-                praesent tristique magna sit amet purus gravida. Sagittis orci a
-                scelerisque purus semper eget duis at tellus. Ullamcorper morbi
-                tincidunt ornare massa eget egestas purus viverra accumsan.
-                Ligula ullamcorper malesuada proin libero. Molestie a iaculis at
-                erat pellentesque adipiscing. Vitae tempus quam pellentesque
-                nec. Est pellentesque elit ullamcorper dignissim cras tincidunt.{" "}
+                elit ullamcorper dignissim cras. Pretium aenean pharetra
+                maAuthgna ac placerat vestibulum lectus mauris. Nec feugiat in
+                fermentum posuere urna nec tincidunt. Praesent elementum
+                facilisis leo vel fringilla est. Convallis posuere morbi leo
+                urna molestie at elementum eu facilisis. Enim diam vulputate ut
+                pharetra sit amet aliquam. Dui nunc mattis enim ut tellus
+                elementum sagittis vitae et. Nascetur ridiculus mus mauris vitae
+                ultricies. Dolor sit amet consectetur adipiscing elit ut aliquam
+                purus. Odio ut enim blandit volutpat maecenas volutpat blandit.
+                Eget aliquet nibh praesent tristique magna sit amet purus
+                gravida. Sagittis orci a scelerisque purus semper eget duis at
+                tellus. Ullamcorper morbi tincidunt ornare massa eget egestas
+                purus viverra accumsan. Ligula ullamcorper malesuada proin
+                libero. Molestie a iaculis at erat pellentesque adipiscing.
+                Vitae tempus quam pellentesque nec. Est pellentesque elit
+                ullamcorper dignissim cras tincidunt.{" "}
             </p>
             <br />
             <p>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import axios from "axios";
 import "./form.css";
 
 const AccountCreationForm = () => {
     const [passwordMatch, setPasswordMatch] = useState(true);
     const [accountExists, setAccountExists] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     const {
@@ -26,32 +28,30 @@ const AccountCreationForm = () => {
         }
     }, [userPassword, userConfirmPassword]);
 
-    const createAccount = async (data) => {
+    const createAccount = async (accountDetails) => {
         try {
-            const response = await fetch("/api/accountCreation", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
+            const response = await axios.post("/api/accountCreation", {
+                accountDetails,
             });
-            const result = await response;
-            if (result.status === 200) {
-                navigate("/");
-            }
-            if (result.status === 401) {
+            if (response.status === 200) {
+                setError(null);
+                navigate("/signIn");
+            } else if (response.status === 409) {
                 setAccountExists(true);
             }
         } catch (error) {
             console.error("There was an error submitting the form", error);
+            setError(
+                "There was an error submitting the form, please try again."
+            );
         }
     };
     return (
         <div className="min-h-screen mt-10">
             <div className="w-full p-6 m-auto bg-white rounded-md ring-2 shadow-md shadow-slate-600/80 ring-slate-600 lg:max-w-xl">
                 <form
-                    onSubmit={handleSubmit((data) => {
-                        createAccount(data);
+                    onSubmit={handleSubmit((formData) => {
+                        createAccount(formData);
                     })}
                 >
                     <div>
@@ -150,6 +150,11 @@ const AccountCreationForm = () => {
                         )}
                     </div>
                     <div>
+                        {error && (
+                            <p className="errorMsg" role="alert">
+                                {error}
+                            </p>
+                        )}
                         <button
                             type="submit"
                             className="w-full p-2 m-auto bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4 mt-5 rounded"

@@ -8,11 +8,12 @@ const pool = new Pool({
 });
 
 class User {
-    constructor(firstName, lastName, email, verified) {
+    constructor(firstName, lastName, email, role, id) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.verified = verified;
+        this.role = role;
+        this.id = id;
     }
 }
 
@@ -27,16 +28,31 @@ class UserDao {
             rows[0].first_name,
             rows[0].last_name,
             rows[0].email,
-            rows[0].verified
+            rows[0].role,
+            rows[0].id
+        );
+    }
+
+    static async getUserById(id) {
+        const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [
+            id,
+        ]);
+        if (rows.length === 0) return null;
+        return new User(
+            rows[0].first_name,
+            rows[0].last_name,
+            rows[0].email,
+            rows[0].role,
+            rows[0].id
         );
     }
 
     static async createUser(firstName, lastName, email, password) {
-        const newUser = await pool.query(
+        const { rows } = await pool.query(
             "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, crypt($4, gen_salt('bf', 8))) RETURNING *",
             [firstName, lastName, email, password]
         );
-        return newUser;
+        return rows[0].id;
     }
 
     static async loginUser(email, password) {
