@@ -7,14 +7,16 @@ import "./Home.css";
 
 function SharedLayout() {
     return (
-        <Container>
-            <NavigationBar />
-            <div className="main">
-                <Outlet />
-            </div>
+        <div className="d-flex flex-column min-vh-100">
+            <Container className="mb-auto">
+                <NavigationBar />
+                <div className="main">
+                    <Outlet />
+                </div>
+            </Container>
+
             <Footer />
-        </Container>
+        </div>
     );
 }
-
 export default SharedLayout;

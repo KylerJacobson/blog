@@ -11,6 +11,7 @@ function NavigationBar() {
     const navigate = useNavigate();
 
     async function handleClick() {
+        console.log(currentUser);
         if (currentUser) {
             try {
                 await axios.post("/api/logout", {
@@ -29,7 +30,9 @@ function NavigationBar() {
     return (
         <Navbar expand="lg" className="bg-body-tertiary">
             <Container>
-                <Navbar.Brand href="/">kylerjacobson.dev</Navbar.Brand>
+                <Navbar.Brand as={Link} to={"/"}>
+                    kylerjacobson.dev
+                </Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse className="justify-content-end">
                     <Nav className="me-auto">
@@ -39,7 +42,13 @@ function NavigationBar() {
                         <Nav.Link as={Link} to={"/about"}>
                             About
                         </Nav.Link>
+                        {currentUser?.role === 1 && (
+                            <Nav.Link as={Link} to={"/createPost"}>
+                                Create Posts
+                            </Nav.Link>
+                        )}
                     </Nav>
+
                     <Nav className="justify-content-end">
                         {!currentUser && (
                             <Button

@@ -2,6 +2,7 @@ import "./App.css";
 import Home from "./pages/Home";
 import SharedLayout from "./pages/SharedLayout";
 import CreateAccount from "./pages/CreateAccount";
+import CreatePost from "./pages/CreatePost";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthContext } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
@@ -46,6 +47,9 @@ function App() {
                     </Route>
                     <Route path="/signIn" element={<SharedLayout />}>
                         <Route index element={<SignIn />} />
+                    </Route>
+                    <Route path="/createPost" element={<SharedLayout />}>
+                        <Route index element={<CreatePost />} />
                     </Route>
                     <Route path="*" element={<h1>404 Not Found</h1>} />
                 </Routes>

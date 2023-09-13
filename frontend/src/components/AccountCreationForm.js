@@ -55,11 +55,14 @@ const AccountCreationForm = () => {
                     })}
                 >
                     <div>
-                        <label className="mt">First Name:</label>
+                        <label htmlFor="firstName" className="mt">
+                            First Name:
+                        </label>
                         <input
                             className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
                             type="text"
                             name="firstName"
+                            id="firstName"
                             {...register("firstName", {
                                 required: true,
                                 maxLength: 20,
@@ -76,11 +79,14 @@ const AccountCreationForm = () => {
                         )}
                     </div>
                     <div>
-                        <label className="mt-4">Last Name:</label>
+                        <label htmlFor="lastName" className="mt-4">
+                            Last Name:
+                        </label>
                         <input
                             className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
                             type="text"
                             name="lastName"
+                            id="lastName"
                             {...register("lastName", {
                                 required: true,
                                 maxLength: 20,
@@ -96,11 +102,14 @@ const AccountCreationForm = () => {
                         )}
                     </div>
                     <div>
-                        <label className="mt-4">Email:</label>
+                        <label htmlFor="email" className="mt-4">
+                            Email:
+                        </label>
                         <input
                             className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
                             type="email"
                             name="email"
+                            id="email"
                             {...register("email", { required: true })}
                         />
                         {errors.email?.type === "required" && (
@@ -113,11 +122,14 @@ const AccountCreationForm = () => {
                         )}
                     </div>
                     <div>
-                        <label className="mt-4">Password:</label>
+                        <label htmlFor="password" className="mt-4">
+                            Password:
+                        </label>
                         <input
                             className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
                             type="password"
                             name="password"
+                            id="password"
                             {...register("password", {
                                 required: true,
                                 minLength: 6,
@@ -133,11 +145,14 @@ const AccountCreationForm = () => {
                         )}
                     </div>
                     <div>
-                        <label className="mt-4">Confirm Password:</label>
+                        <label htmlFor="confirmPassword" className="mt-4">
+                            Confirm Password:
+                        </label>
                         <input
                             className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
                             type="password"
                             name="confirmPassword"
+                            id="confirmPassword"
                             {...register("confirmPassword")}
                         />
                         {errors.password?.type === "required" && (
