@@ -20,7 +20,6 @@ function Home() {
                     const response = await axios.get(
                         "/api/getPublicRecentPosts"
                     );
-                    console.log(response);
                     setPosts(response.data);
                 }
             } catch (error) {
@@ -40,6 +39,7 @@ function Home() {
                         content={post.content}
                         restricted={post.restricted}
                         postDate={post.created_at}
+                        postId={post.post_id}
                     />
                 ))
             ) : (

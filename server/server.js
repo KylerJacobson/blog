@@ -1,13 +1,14 @@
 const express = require("express");
 const app = express();
 const path = require("path");
-const { Pool } = require("pg");
 const { check, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const { expressjwt: ejwt } = require("express-jwt");
 const session = require("express-session");
 const UserDao = require("../server/models/userDao");
 const PostDao = require("../server/models/postDao");
+const dotenv = require("dotenv");
+require("dotenv").config();
 
 const JWT_SECRET = process.env.JWTSecret;
 const SESSION_SECRET = process.env.SessionSecret;
@@ -117,7 +118,6 @@ app.post(
 );
 
 app.get("/api/getAllRecentPosts", verifyToken, async (req, res) => {
-    console.log("getting all posts");
     try {
         let posts = await PostDao.getAllRecentPosts();
         res.status(200).json(posts);
@@ -185,6 +185,26 @@ app.post(
         } catch (error) {
             console.error("Internal Server Error:", error);
             res.status(500).json({ message: "Internal Server Error" });
+        }
+    }
+);
+
+app.post(
+    "/api/deletePostById",
+    verifyToken,
+    [check("postId", "PostId is a required integer").notEmpty().isInt()],
+    async (req, res) => {
+        const postId = req.body.postId;
+        try {
+            const valid = PostDao.deletePostById(postId);
+            if (!valid) {
+                res.status(500).json({
+                    message: "Error deleting post, please try again.",
+                });
+            }
+            res.status(200).json({ message: "Successfully deleted message" });
+        } catch (error) {
+            console.error("Internal server error");
         }
     }
 );

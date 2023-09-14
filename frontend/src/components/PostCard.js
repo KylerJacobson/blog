@@ -1,6 +1,7 @@
 import React from "react";
+import axios from "axios";
 
-function PostCard(props) {
+const PostCard = (props) => {
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const utcDate = new Date(props.postDate);
@@ -9,6 +10,16 @@ function PostCard(props) {
         timeZone: userTimeZone,
     });
 
+    const deletePost = async () => {
+        let postId = props.postId;
+        const response = await axios.post("/api/deletePostById", {
+            postId,
+        });
+        if (response.status === 200) {
+        } else {
+            console.log("error deleting post, please try again");
+        }
+    };
     return (
         <div className="bg-white shadow-md my-6	 rounded-md p-4 ring-2 shadow-md ring-slate-600">
             <h2 className="text-2xl font-semibold">{props.title}</h2>
@@ -27,8 +38,9 @@ function PostCard(props) {
                 </p>
             )}
             <p>Posted at: {postTime}</p>
+            <button onClick={deletePost}>Delete Post</button>
         </div>
     );
-}
+};
 
 export default PostCard;

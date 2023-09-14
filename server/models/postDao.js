@@ -1,4 +1,6 @@
 const { Pool } = require("pg");
+const dotenv = require("dotenv");
+require("dotenv").config();
 
 const pool = new Pool({
     connectionString: process.env.DBConnLink,
@@ -6,14 +8,6 @@ const pool = new Pool({
         rejectUnauthorized: false,
     },
 });
-
-class Post {
-    constructor(title, content, userId) {
-        this.title = title;
-        this.content = content;
-        this.userId = userId;
-    }
-}
 
 class PostDao {
     static async createPost(title, content, restricted, userId) {
@@ -47,6 +41,21 @@ class PostDao {
             return rows;
         } catch (error) {
             console.error(`Error inserting into posts: ${error}`);
+        }
+    }
+
+    static async deletePostById(postId) {
+        try {
+            const { rows } = await pool.query(
+                "DELETE FROM posts WHERE post_id = $1",
+                [postId]
+            );
+            if (rows === 0) {
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error(`Error deleting from posts: ${error}`);
         }
     }
 }

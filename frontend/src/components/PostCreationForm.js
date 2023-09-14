@@ -19,7 +19,7 @@ const PostCreationFrom = () => {
                 postData,
             });
             if (response.status === 200) {
-                navigate("/signIn");
+                navigate("/");
             } else {
             }
         } catch (error) {
