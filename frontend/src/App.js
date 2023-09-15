@@ -2,29 +2,68 @@ import "./App.css";
 import Home from "./pages/Home";
 import SharedLayout from "./pages/SharedLayout";
 import CreateAccount from "./pages/CreateAccount";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import CreatePost from "./pages/CreatePost";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { AuthContext } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
+import { useEffect, useState, useContext } from "react";
+import axios from "axios";
 
 function App() {
+    const [currentUser, setCurrentUser] = useState(null);
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<SharedLayout />}>
-                    <Route index element={<Home />} />
-                </Route>
-                <Route path="/about" element={<SharedLayout />}>
-                    <Route index element={<h1>About</h1>} />
-                </Route>
-                <Route path="/createAccount" element={<SharedLayout />}>
-                    <Route index element={<CreateAccount />} />
-                </Route>
-                <Route path="/signIn" element={<SharedLayout />}>
-                    <Route index element={<SignIn />} />
-                </Route>
-                <Route path="*" element={<h1>404 Not Found</h1>} />
-            </Routes>
-        </BrowserRouter>
+        <AuthContext.Provider value={{ currentUser, setCurrentUser }}>
+            <BrowserRouter>
+                <RedirectToLogin>
+                    <Routes>
+                        <Route path="/" element={<SharedLayout />}>
+                            <Route index element={<Home />} />
+                        </Route>
+                        <Route path="/about" element={<SharedLayout />}>
+                            <Route index element={<h1>About</h1>} />
+                        </Route>
+                        <Route path="/createAccount" element={<SharedLayout />}>
+                            <Route index element={<CreateAccount />} />
+                        </Route>
+                        <Route path="/signIn" element={<SharedLayout />}>
+                            <Route index element={<SignIn />} />
+                        </Route>
+                        <Route path="/createPost" element={<SharedLayout />}>
+                            <Route index element={<CreatePost />} />
+                        </Route>
+                        <Route path="*" element={<h1>404 Not Found</h1>} />
+                    </Routes>
+                </RedirectToLogin>
+            </BrowserRouter>
+        </AuthContext.Provider>
     );
 }
 
 export default App;
+
+function RedirectToLogin(props) {
+    const { setCurrentUser } = useContext(AuthContext);
+    const navigate = useNavigate();
+    useEffect(() => {
+        const verifySession = async () => {
+            try {
+                const { data: user } = await axios.get("/api/getUser/", {
+                    withCredentials: true,
+                });
+                setCurrentUser(user);
+            } catch (error) {
+                if (
+                    error.response &&
+                    error.response.data.message ===
+                        "Unauthorized: Token expired"
+                ) {
+                    console.log("Need to navigate to /signIn");
+                    navigate("/signIn");
+                }
+                console.error("Session verification failed: ", error);
+            }
+        };
+        verifySession();
+    }, []);
+    return props.children;
+}

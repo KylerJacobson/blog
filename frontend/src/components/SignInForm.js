@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthContext";
+import axios from "axios";
 import "./form.css";
 
 const SignInForm = () => {
     const [validLogin, setValidLogin] = useState();
+    const { currentUser, setCurrentUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const {
@@ -13,25 +16,27 @@ const SignInForm = () => {
         formState: { errors },
     } = useForm();
 
-    const signIn = async (data) => {
+    const signIn = async (formData) => {
         try {
-            const response = await fetch("/api/signIn", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
+            const { data: token } = await axios.post("/api/signIn", {
+                formData,
             });
-            const result = await response.json();
-            if (!result.token) {
-                setValidLogin(false);
-            } else {
-                setValidLogin(true);
-                localStorage.setItem("jwtToken", result.token);
-                navigate("/");
-            }
+            setValidLogin(true);
+            const { data: userData } = await axios.get("/api/getUser/", {
+                withCredentials: true,
+            });
+            const { firstName, lastName, email, role } = userData;
+            setCurrentUser({
+                firstName,
+                lastName,
+                email,
+                role,
+                token,
+            });
+            navigate("/");
         } catch (error) {
             console.error("There was an error submitting the form", error);
+            setValidLogin(false);
         }
     };
 
@@ -39,8 +44,8 @@ const SignInForm = () => {
         <div className="min-h-screen mt-10">
             <div className="w-full p-6 m-auto bg-white rounded-md ring-2 shadow-md shadow-slate-600/80 ring-slate-600 lg:max-w-xl">
                 <form
-                    onSubmit={handleSubmit((data) => {
-                        signIn(data);
+                    onSubmit={handleSubmit((formData) => {
+                        signIn(formData);
                     })}
                 >
                     <div>
