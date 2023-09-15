@@ -57,7 +57,6 @@ function RedirectToLogin(props) {
                     error.response.data.message ===
                         "Unauthorized: Token expired"
                 ) {
-                    console.log("Need to navigate to /signIn");
                     navigate("/signIn");
                 }
                 console.error("Session verification failed: ", error);
