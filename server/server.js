@@ -8,7 +8,9 @@ const session = require("express-session");
 const UserDao = require("../server/models/userDao");
 const PostDao = require("../server/models/postDao");
 const dotenv = require("dotenv");
-require("dotenv").config({ path: path.resolve(__dirname, ". ./.env") });
+require("dotenv").config({
+    path: path.resolve(__dirname, "../etc/secrets/.env"),
+});
 
 const JWT_SECRET = process.env.JWTSecret;
 const SESSION_SECRET = process.env.SessionSecret;
