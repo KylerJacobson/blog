@@ -22,6 +22,17 @@ class PostDao {
         }
     }
 
+    static async updatedPost(title, content, restricted, userId, postId) {
+        try {
+            const { rows } = await pool.query(
+                "UPDATE posts SET title = $1, content = $2, restricted = $3, user_id = $4 WHERE post_id = $5 RETURNING *",
+                [title, content, restricted, userId, postId]
+            );
+        } catch (error) {
+            console.error(`Error inserting into posts: ${error}`);
+        }
+    }
+
     static async getRecentPublicPosts() {
         try {
             const { rows } = await pool.query(
@@ -56,6 +67,21 @@ class PostDao {
             return true;
         } catch (error) {
             console.error(`Error deleting from posts: ${error}`);
+        }
+    }
+
+    static async getPostById(postId) {
+        try {
+            const { rows } = await pool.query(
+                "SELECT * FROM posts WHERE post_id = $1",
+                [postId]
+            );
+            if (rows === 0) {
+                return false;
+            }
+            return rows[0];
+        } catch (error) {
+            console.error(`Error getting from posts: ${error}`);
         }
     }
 }

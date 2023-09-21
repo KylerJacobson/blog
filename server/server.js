@@ -209,6 +209,65 @@ app.post(
     }
 );
 
+app.get("/api/post/:postId", verifyToken, async (req, res) => {
+    const { postId } = req.params;
+    try {
+        const post = await PostDao.getPostById(postId);
+        if (!post) {
+            res.status(500).json({
+                message: "Error getting post, please try again.",
+            });
+        }
+        return res.status(200).json(post);
+    } catch (error) {
+        console.error("Internal server error");
+    }
+});
+
+app.put(
+    "/api/post/:postId",
+    verifyToken,
+    [
+        check("postData.title", "Title is a required field")
+            .notEmpty()
+            .trim()
+            .escape(),
+        check("postData.content", "Content is a required field")
+            .notEmpty()
+            .escape()
+            .trim(),
+    ],
+    async (req, res) => {
+        if (req.payload.role != 1) {
+            res.status(401).json({
+                message: "You are not authorized to create a post",
+            });
+        }
+        const { postId } = req.params;
+        const errors = validationResult(req);
+        const { title, content, restricted } = req.body.postData;
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        try {
+            const post = PostDao.updatedPost(
+                title,
+                content,
+                restricted,
+                req.payload.sub,
+                postId
+            );
+            if (post) {
+                res.status(200).json({ message: "Post updated" });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+);
+
 app.post(
     "/api/signIn",
     [
