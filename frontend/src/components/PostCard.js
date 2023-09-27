@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../contexts/AuthContext";
 
 const PostCard = (props) => {
+    const { currentUser } = useContext(AuthContext);
+    const navigate = useNavigate();
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const utcDate = new Date(props.postDate);
@@ -11,7 +15,7 @@ const PostCard = (props) => {
     });
 
     const deletePost = async () => {
-        let postId = props.postId;
+        const postId = props.postId;
         const response = await axios.post("/api/deletePostById", {
             postId,
         });
@@ -19,6 +23,11 @@ const PostCard = (props) => {
         } else {
             console.log("error deleting post, please try again");
         }
+    };
+
+    const editPost = async () => {
+        const postId = props.postId;
+        navigate(`/editPost/${postId}`);
     };
     return (
         <div className="bg-white shadow-md my-6	 rounded-md p-4 ring-2 shadow-md ring-slate-600">
@@ -38,7 +47,24 @@ const PostCard = (props) => {
                 </p>
             )}
             <p>Posted at: {postTime}</p>
-            <button onClick={deletePost}>Delete Post</button>
+            <div>
+                {currentUser?.role === 1 && (
+                    <button
+                        className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
+                        onClick={editPost}
+                    >
+                        Edit Post
+                    </button>
+                )}{" "}
+                {currentUser?.role === 1 && (
+                    <button
+                        className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
+                        onClick={deletePost}
+                    >
+                        Delete Post
+                    </button>
+                )}
+            </div>
         </div>
     );
 };

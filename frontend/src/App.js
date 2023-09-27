@@ -31,6 +31,12 @@ function App() {
                         <Route path="/createPost" element={<SharedLayout />}>
                             <Route index element={<CreatePost />} />
                         </Route>
+                        <Route
+                            path="/editPost/:postId"
+                            element={<SharedLayout />}
+                        >
+                            <Route index element={<CreatePost />} />
+                        </Route>
                         <Route path="*" element={<h1>404 Not Found</h1>} />
                     </Routes>
                 </RedirectToLogin>
@@ -57,7 +63,6 @@ function RedirectToLogin(props) {
                     error.response.data.message ===
                         "Unauthorized: Token expired"
                 ) {
-                    console.log("Need to navigate to /signIn");
                     navigate("/signIn");
                 }
                 console.error("Session verification failed: ", error);

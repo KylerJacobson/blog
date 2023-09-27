@@ -11,7 +11,6 @@ function NavigationBar() {
     const navigate = useNavigate();
 
     async function handleClick() {
-        console.log(currentUser);
         if (currentUser) {
             try {
                 await axios.post("/api/logout", {
