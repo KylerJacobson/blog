@@ -93,13 +93,14 @@ app.post(
     ],
     verifyToken,
     async (req, res) => {
+        const { title, content, restricted } = req.body.postData;
         const errors = validationResult(req);
+
         if (req.payload.role != 1) {
-            res.status(401).json({
+            return res.status(401).json({
                 message: "You are not authorized to create a post",
             });
         }
-        const { title, content, restricted } = req.body.postData;
 
         try {
             const post = await PostDao.createPost(
@@ -239,8 +240,8 @@ app.put(
     ],
     async (req, res) => {
         if (req.payload.role != 1) {
-            res.status(401).json({
-                message: "You are not authorized to create a post",
+            return res.status(401).json({
+                message: "You are not authorized to update a post",
             });
         }
         const { postId } = req.params;
