@@ -31,7 +31,7 @@ const PostCreationFrom = () => {
                         restricted: data.restricted,
                     });
                 } catch (error) {
-                    console.log(error);
+                    console.error(error);
                 }
             }
         };

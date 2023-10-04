@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { AuthContext } from "../contexts/AuthContext";
 import axios from "axios";
+import { ADMIN } from "../constants/roleConstants";
 
 function NavigationBar() {
     const { currentUser, setCurrentUser } = useContext(AuthContext);
@@ -41,9 +42,14 @@ function NavigationBar() {
                         <Nav.Link as={Link} to={"/about"}>
                             About
                         </Nav.Link>
-                        {currentUser?.role === 1 && (
+                        {currentUser?.role === ADMIN && (
                             <Nav.Link as={Link} to={"/createPost"}>
                                 Create Posts
+                            </Nav.Link>
+                        )}
+                        {currentUser?.role === ADMIN && (
+                            <Nav.Link as={Link} to={"/adminPanel"}>
+                                Admin
                             </Nav.Link>
                         )}
                     </Nav>

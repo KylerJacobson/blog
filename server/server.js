@@ -10,6 +10,8 @@ const PostDao = require("../server/models/postDao");
 const dotenv = require("dotenv");
 require("dotenv").config();
 
+const ADMIN = 1;
+const PRIVILEGED = 2;
 const JWT_SECRET = process.env.JWTSecret;
 const SESSION_SECRET = process.env.SessionSecret;
 const COOKIE_SECURITY = process.env.CookieSecurity === "true";
@@ -79,6 +81,71 @@ app.get("/api/getUser", verifyToken, async (req, res) => {
     }
 });
 
+app.get("/api/getUsers", verifyToken, async (req, res) => {
+    if (req.payload.role != ADMIN) {
+        return res.status(401).json({
+            message: "You are not authorized to retrieve all users",
+        });
+    }
+    try {
+        const users = await UserDao.getAllUsers();
+        if (users.length === 0) {
+            return res.status(404).json({ message: "Users not found" });
+        } else {
+            return res.status(200).json(users);
+        }
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+app.post("/api/completeUserAccessRequest", verifyToken, async (req, res) => {
+    if (req.payload.role != ADMIN) {
+        return res.status(401).json({
+            message: "You are not authorized to complete access requests",
+        });
+    }
+    const userId = req.body.id;
+    const role = req.body.role;
+    try {
+        let response = await UserDao.updateUserRole(userId, role);
+        if (response) {
+            return res
+                .status(200)
+                .json({ message: "Successfully updated role" });
+        } else {
+            return res.status(500).json({ message: "Error updating role" });
+        }
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+app.post(
+    "/api/deleteUserById",
+    verifyToken,
+    [check("userId", "UserId is a required integer").notEmpty().isInt()],
+    async (req, res) => {
+        const userId = req.body.userId;
+        if (req.payload.role != ADMIN) {
+            return res.status(401).json({
+                message: "You are not authorized to delete users",
+            });
+        }
+        try {
+            const valid = UserDao.deleteUserById(userId);
+            if (!valid) {
+                res.status(500).json({
+                    message: "Error deleting post, please try again.",
+                });
+            }
+            res.status(200).json({ message: "Successfully deleted message" });
+        } catch (error) {
+            console.error("Internal server error");
+        }
+    }
+);
+
 app.post(
     "/api/postCreation",
     [
@@ -96,7 +163,7 @@ app.post(
         const { title, content, restricted } = req.body.postData;
         const errors = validationResult(req);
 
-        if (req.payload.role != 1) {
+        if (req.payload.role != ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to create a post",
             });
@@ -119,6 +186,11 @@ app.post(
 );
 
 app.get("/api/getAllRecentPosts", verifyToken, async (req, res) => {
+    if (req.payload.role != ADMIN && req.payload.role != PRIVILEGED) {
+        return res.status(401).json({
+            message: "You are not authorized to retrieve private posts",
+        });
+    }
     try {
         let posts = await PostDao.getAllRecentPosts();
         res.status(200).json(posts);
@@ -164,7 +236,7 @@ app.post(
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const { firstName, lastName, email, password } =
+        const { firstName, lastName, email, password, restricted } =
             req.body.accountDetails;
         try {
             let user = await UserDao.getUserByEmail(email);
@@ -175,7 +247,8 @@ app.post(
                     firstName,
                     lastName,
                     email,
-                    password
+                    password,
+                    restricted
                 );
                 if (userId) {
                     res.status(200).json({
@@ -196,6 +269,11 @@ app.post(
     [check("postId", "PostId is a required integer").notEmpty().isInt()],
     async (req, res) => {
         const postId = req.body.postId;
+        if (req.payload.role != ADMIN) {
+            return res.status(401).json({
+                message: "You are not authorized to delete a post",
+            });
+        }
         try {
             const valid = PostDao.deletePostById(postId);
             if (!valid) {
@@ -239,7 +317,7 @@ app.put(
             .trim(),
     ],
     async (req, res) => {
-        if (req.payload.role != 1) {
+        if (req.payload.role != ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to update a post",
             });

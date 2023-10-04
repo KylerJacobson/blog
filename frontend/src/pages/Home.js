@@ -3,7 +3,7 @@ import "./Home.css";
 import axios from "axios";
 import PostCard from "../components/PostCard";
 import { AuthContext } from "../contexts/AuthContext";
-
+import { ADMIN, PRIVILEGED } from "../constants/roleConstants";
 function Home() {
     const [posts, setPosts] = useState("");
     const currentUser = useContext(AuthContext);
@@ -11,7 +11,11 @@ function Home() {
     useEffect(() => {
         const getPosts = async () => {
             try {
-                if (currentUser && currentUser?.currentUser?.role > 0) {
+                if (
+                    currentUser &&
+                    (currentUser?.currentUser?.role === PRIVILEGED ||
+                        currentUser?.currentUser?.role === ADMIN)
+                ) {
                     const response = await axios.get("/api/getAllRecentPosts", {
                         withCredentials: true,
                     });
