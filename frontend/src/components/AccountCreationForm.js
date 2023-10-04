@@ -164,6 +164,21 @@ const AccountCreationForm = () => {
                             </p>
                         )}
                     </div>
+                    <div className="mt-4 ">
+                        <input
+                            type="checkbox"
+                            id="restricted"
+                            name="restricted"
+                            className="mr-2"
+                            {...register("restricted")}
+                        />
+                        <label
+                            htmlFor="restricted"
+                            className="text-lg font-medium text-gray-600"
+                        >
+                            Request access to private posts
+                        </label>
+                    </div>
                     <div>
                         {error && (
                             <p className="errorMsg" role="alert">

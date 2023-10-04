@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import SharedLayout from "./pages/SharedLayout";
 import CreateAccount from "./pages/CreateAccount";
 import CreatePost from "./pages/CreatePost";
+import AdminPanel from "./pages/AdminPanel";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthContext } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
@@ -30,6 +31,9 @@ function App() {
                         </Route>
                         <Route path="/createPost" element={<SharedLayout />}>
                             <Route index element={<CreatePost />} />
+                        </Route>
+                        <Route path="/adminPanel" element={<SharedLayout />}>
+                            <Route index element={<AdminPanel />} />
                         </Route>
                         <Route
                             path="/editPost/:postId"

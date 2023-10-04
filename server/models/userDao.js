@@ -49,12 +49,65 @@ class UserDao {
         );
     }
 
-    static async createUser(firstName, lastName, email, password) {
+    static async getAllUsers() {
         const { rows } = await pool.query(
-            "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, crypt($4, gen_salt('bf', 8))) RETURNING *",
-            [firstName, lastName, email, password]
+            "SELECT id, first_name, last_name, email, role, created_at FROM users ORDER BY created_at ASC"
+        );
+        if (rows.length === 0) return [];
+        return rows;
+    }
+
+    static async getUsersByRole(role) {
+        const { rows } = await pool.query(
+            "SELECT id, first_name, last_name, email, role, created_at FROM users WHERE role = $1",
+            [role]
+        );
+        if (rows.length === 0) return [];
+        return rows;
+    }
+
+    static async updateUserRole(id, role) {
+        try {
+            const { rows } = await pool.query(
+                "UPDATE users SET role = $1 WHERE id = $2 RETURNING id",
+                [role, id]
+            );
+            return rows;
+        } catch (error) {
+            console.error(`Error inserting into posts: ${error}`);
+        }
+    }
+    static async createUser(
+        firstName,
+        lastName,
+        email,
+        password,
+        accessRequest
+    ) {
+        let access = 0;
+        if (accessRequest) {
+            access = -1;
+        }
+        const { rows } = await pool.query(
+            "INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, crypt($4, gen_salt('bf', 8)), $5) RETURNING *",
+            [firstName, lastName, email, password, access]
         );
         return rows[0].id;
+    }
+
+    static async deleteUserById(userId) {
+        try {
+            const { rows } = await pool.query(
+                "DELETE FROM users WHERE id = $1",
+                [userId]
+            );
+            if (rows === 0) {
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error(`Error deleting from users: ${error}`);
+        }
     }
 
     static async loginUser(email, password) {
