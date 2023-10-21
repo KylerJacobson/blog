@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import moment from "moment-timezone";
+import formatDate from "../helpers/helpers";
+
 import {
     NON_PRIVILEGED,
     PRIVILEGED,
@@ -44,13 +45,7 @@ const CustomerAdminTable = () => {
             console.error("There was an error deleting the user");
         }
     };
-    const formatDate = (dateTime) => {
-        //@follow-up Why is the PostgreSQL server UTC + 6 hours?
-        let tempDate = new Date(dateTime);
-        tempDate.setHours(tempDate.getHours() - 6);
-        const formattedDate = moment(tempDate).format("MM/DD/YYYY HH:mm");
-        return formattedDate;
-    };
+
     const formatRole = (role) => {
         switch (role) {
             case -1:

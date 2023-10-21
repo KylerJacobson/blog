@@ -12,6 +12,8 @@ require("dotenv").config();
 
 const ADMIN = 1;
 const PRIVILEGED = 2;
+const NON_PRIVILEGED = 0;
+const REQUESTED = -1;
 const JWT_SECRET = process.env.JWTSecret;
 const SESSION_SECRET = process.env.SessionSecret;
 const COOKIE_SECURITY = process.env.CookieSecurity === "true";
@@ -288,7 +290,9 @@ app.post(
     }
 );
 
-app.get("/api/post/:postId", verifyToken, async (req, res) => {
+// app.get("/api/post/:postId", verifyToken, async (req, res) => {
+
+app.get("/api/post/:postId", async (req, res, next) => {
     const { postId } = req.params;
     try {
         const post = await PostDao.getPostById(postId);
@@ -297,6 +301,18 @@ app.get("/api/post/:postId", verifyToken, async (req, res) => {
                 message: "Error getting post, please try again.",
             });
         }
+        if (post.restricted) {
+            verifyToken(req, res, next);
+            if (
+                req.payload.role === REQUESTED ||
+                req.payload.role === NON_PRIVILEGED
+            ) {
+                return res.status(403).json({
+                    message: "You are not authorized to view this post",
+                });
+            }
+        }
+
         return res.status(200).json(post);
     } catch (error) {
         console.error("Internal server error");
