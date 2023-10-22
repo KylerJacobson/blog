@@ -290,8 +290,6 @@ app.post(
     }
 );
 
-// app.get("/api/post/:postId", verifyToken, async (req, res) => {
-
 app.get("/api/post/:postId", async (req, res, next) => {
     const { postId } = req.params;
     try {
