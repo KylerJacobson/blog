@@ -30,7 +30,7 @@ function Post() {
                 setHasError(true);
                 const message = error?.response?.data || {};
                 setErrorMessage(message || "An unknown error occurred");
-                navigate("/error/401");
+                navigate("/error/" + error?.response?.status);
             }
         };
         getPost();

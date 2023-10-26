@@ -8,7 +8,7 @@ function ErrorComponent(props) {
             <h1>Oops! Something went wrong...</h1>
             <p>
                 {errorId === "401" &&
-                    "401 - You are not authorized to complete this actions"}
+                    "401 - You are not authorized to complete this action"}
             </p>
         </div>
     );
