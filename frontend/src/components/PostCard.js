@@ -31,7 +31,7 @@ const PostCard = (props) => {
     };
 
     return (
-        <div className="bg-white shadow-md my-6	rounded-md p-4 ring-2 shadow-md ring-slate-600 h-80 overflow-hidden">
+        <div className="bg-white shadow-md my-6	rounded-md p-4 ring-2 shadow-sm ring-slate-600 h-80 overflow-hidden">
             <h2
                 className="text-2xl font-semibold cursor-pointer"
                 onClick={viewPost}
