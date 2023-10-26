@@ -30,6 +30,7 @@ function Post() {
                 setHasError(true);
                 const message = error?.response?.data || {};
                 setErrorMessage(message || "An unknown error occurred");
+                navigate("/error/401");
             }
         };
         getPost();
@@ -78,7 +79,6 @@ function Post() {
             <div className="post-content mt-8">
                 <p>{post.content}</p>
             </div>
-            {hasError && <ErrorComponent message={errorMessage} />}
         </div>
     );
 }
