@@ -3,17 +3,12 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../contexts/AuthContext";
 import { ADMIN } from "../constants/roleConstants";
+import formatDate from "../helpers/helpers";
+import "./PostCard.css";
 
 const PostCard = (props) => {
     const { currentUser } = useContext(AuthContext);
     const navigate = useNavigate();
-    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    const utcDate = new Date(props.postDate);
-
-    const postTime = utcDate.toLocaleString(undefined, {
-        timeZone: userTimeZone,
-    });
 
     const deletePost = async () => {
         const postId = props.postId;
@@ -30,11 +25,26 @@ const PostCard = (props) => {
         const postId = props.postId;
         navigate(`/editPost/${postId}`);
     };
+    const viewPost = async () => {
+        const postId = props.postId;
+        navigate(`/post/${postId}`);
+    };
+
     return (
-        <div className="bg-white shadow-md my-6	 rounded-md p-4 ring-2 shadow-md ring-slate-600">
-            <h2 className="text-2xl font-semibold">{props.title}</h2>
-            <p className="text-gray-600">{props.content}</p>
-            <p className="text-gray-500 mt-2">Author: Kyler Jacobson</p>
+        <div className="bg-white shadow-md my-6	rounded-md p-4 ring-2 shadow-sm ring-slate-600 h-80 overflow-hidden">
+            <h2
+                className="text-2xl font-semibold cursor-pointer"
+                onClick={viewPost}
+            >
+                {props.title}
+            </h2>
+            <div className="truncate overflow-ellipsis h-[100px]">
+                <div className="post-content ">
+                    <p className=" text-gray-600">{props.content}</p>
+                    <p className="text-gray-500 mt-2">Author: Kyler Jacobson</p>
+                </div>
+            </div>
+
             {props.restricted && (
                 <p className="text-sm text-gray-600 flex items-center">
                     <svg
@@ -47,7 +57,7 @@ const PostCard = (props) => {
                     Private
                 </p>
             )}
-            <p>Posted at: {postTime}</p>
+            <p>Posted at: {formatDate(props.postDate)}</p>
             <div>
                 {currentUser?.role === ADMIN && (
                     <button

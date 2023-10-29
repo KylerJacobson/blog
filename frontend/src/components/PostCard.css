@@ -1,0 +1,16 @@
+.post-content {
+    white-space: pre-line;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.post-content::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px; /* Height of the fade-out effect */
+    background: linear-gradient(to top, white, transparent);
+}

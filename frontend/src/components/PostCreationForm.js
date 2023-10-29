@@ -60,12 +60,12 @@ const PostCreationFrom = () => {
         }
     };
     return (
-        <div className="p-2 m-auto bg-white rounded-md ring-2 shadow-md ring-slate-600 xl:max-w-6xl">
+        <div className="h-[80vh] flex flex-col p-2 m-auto bg-white shadow-lg xl:max-w-6xl">
             <form
                 onSubmit={handleSubmit((postData) => {
                     createPost(postData);
                 })}
-                className="max-w-screen-lg mx-auto p-4"
+                className="flex flex-col h-[90vh] p-4"
             >
                 <div className="mb-4">
                     <label
@@ -86,13 +86,12 @@ const PostCreationFrom = () => {
                     />
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 flex flex-col flex-grow p-4">
                     <textarea
                         id="content"
                         name="content"
                         defaultValue={values.content}
-                        rows="16"
-                        className="mt-1 p-2 w-full rounded-md border"
+                        className="flex flex-col flex-grow p-4 mt-1 p-2 w-full rounded-md border"
                         {...register("content", {
                             required: true,
                         })}

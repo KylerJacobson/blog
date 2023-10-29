@@ -4,11 +4,13 @@ import SharedLayout from "./pages/SharedLayout";
 import CreateAccount from "./pages/CreateAccount";
 import CreatePost from "./pages/CreatePost";
 import AdminPanel from "./pages/AdminPanel";
+import Post from "./pages/Post";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthContext } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import ErrorComponent from "./components/ErrorComponent";
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -40,6 +42,15 @@ function App() {
                             element={<SharedLayout />}
                         >
                             <Route index element={<CreatePost />} />
+                        </Route>
+                        <Route path="/post/:postId" element={<SharedLayout />}>
+                            <Route index element={<Post />} />
+                        </Route>
+                        <Route
+                            path="/error/:errorId"
+                            element={<SharedLayout />}
+                        >
+                            <Route index element={<ErrorComponent />} />
                         </Route>
                         <Route path="*" element={<h1>404 Not Found</h1>} />
                     </Routes>
