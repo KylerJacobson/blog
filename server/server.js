@@ -16,6 +16,7 @@ const {
     BlobSASPermissions,
     generateBlobSASQueryParameters,
 } = require("@azure/storage-blob");
+const router = require("./router");
 const upload = multer({ dest: "uploads/" }); // Temporarily stores files in the 'uploads' directory
 
 const ADMIN = 1;
@@ -44,6 +45,8 @@ app.use(
     })
 );
 
+app.use("/api", router);
+// @todo abstract out to library
 const verifyToken = (req, res, next) => {
     const token = req.session.token;
     if (token) {
@@ -73,73 +76,28 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-app.post(
-    "/upload",
-    verifyToken,
-    upload.array("photos", 10),
-    async (req, res) => {
-        if (req.payload.role != ADMIN) {
-            return res.status(403).json({
-                message: "You are not authorized to upload media",
-            });
-        }
-        const files = req.files;
-        const postId = req.body.postId;
-        const restricted = req.body.restricted;
-        const blobServiceClient = BlobServiceClient.fromConnectionString(
-            process.env.AZURE_STORAGE_CONNECTION_STRING
-        );
+// ------------------------------------------- USER CONTROLLER -------------------------------------------
 
-        try {
-            const containerClient =
-                blobServiceClient.getContainerClient("media");
-            for (const file of files) {
-                const blobName = `blog-media/${file.originalname}`;
-                const blockBlobClient =
-                    containerClient.getBlockBlobClient(blobName);
-                const uploadBlobResponse = await blockBlobClient.uploadFile(
-                    file.path
-                );
-                let mediaInstance = await MediaDao.uploadMedia(
-                    postId,
-                    blobName,
-                    file.mimetype,
-                    restricted
-                );
-            }
-
-            res.status(200).json({
-                message: "File uploaded to Azure Blob storage.",
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: "Error uploading the file." });
-        }
-    }
-);
-
-app.post("/api/mediaSAS", async (req, res) => {
-    const { blobName } = req.body;
-    const blobServiceClient = BlobServiceClient.fromConnectionString(
-        process.env.AZURE_STORAGE_CONNECTION_STRING
-    );
-    const containerClient = blobServiceClient.getContainerClient("media");
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    const sasOptions = {
-        containerName: "media",
-        blobName: blobName,
-        startsOn: new Date(),
-        expiresOn: new Date(new Date().valueOf() + 86400),
-        permissions: BlobSASPermissions.parse("r"),
-    };
-
-    const sasToken = generateBlobSASQueryParameters(
-        sasOptions,
-        blobServiceClient.credential
-    ).toString();
-    const blobSasUrl = `${blockBlobClient.url}?${sasToken}`;
-    return res.status(200).json({ blobSasUrl });
-});
+// @todo READ USERS
+// Create controller that responds to get a get request and returns a list of users
+// should return a comprehensive list or a specific user depending on the userId parameter (always return a list and check permission for admin use case)
+// app.get("/api/getUser", verifyToken, async (req, res) => {
+//     const userId = req.payload.sub;
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//         return res.status(400).json({ errors: errors.array() });
+//     }
+//     try {
+//         const user = await UserDao.getUserById(userId);
+//         if (user == false) {
+//             return res.status(404).json({ message: "User not found" });
+//         } else {
+//             return res.status(200).json(user);
+//         }
+//     } catch (error) {
+//         res.status(500).send(error.message);
+//     }
+// });
 
 app.get("/api/getUser", verifyToken, async (req, res) => {
     const userId = req.payload.sub;
@@ -224,6 +182,7 @@ app.post(
     }
 );
 
+// ------------------------------------------- POST CONTROLLER -------------------------------------------
 app.post(
     "/api/postCreation",
     [
@@ -287,7 +246,102 @@ app.get("/api/getPublicRecentPosts", async (req, res) => {
         console.error(error);
     }
 });
+app.get("/api/post/:postId", async (req, res, next) => {
+    const { postId } = req.params;
+    try {
+        const post = await PostDao.getPostById(postId);
+        if (!post) {
+            res.status(500).json({
+                message: "Error getting post, please try again.",
+            });
+        }
+        if (post.restricted) {
+            verifyToken(req, res, next);
+            if (
+                req.payload.role === REQUESTED ||
+                req.payload.role === NON_PRIVILEGED
+            ) {
+                return res.status(403).json({
+                    message: "You are not authorized to view this post",
+                });
+            }
+        }
 
+        return res.status(200).json(post);
+    } catch (error) {
+        console.error("Internal server error");
+    }
+});
+app.put(
+    "/api/post/:postId",
+    verifyToken,
+    [
+        check("postData.title", "Title is a required field")
+            .notEmpty()
+            .trim()
+            .escape(),
+        check("postData.content", "Content is a required field")
+            .notEmpty()
+            .escape()
+            .trim(),
+    ],
+    async (req, res) => {
+        if (req.payload.role != ADMIN) {
+            return res.status(401).json({
+                message: "You are not authorized to update a post",
+            });
+        }
+        const { postId } = req.params;
+        const errors = validationResult(req);
+        const { title, content, restricted } = req.body.postData;
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        try {
+            const post = PostDao.updatedPost(
+                title,
+                content,
+                restricted,
+                req.payload.sub,
+                postId
+            );
+            if (post) {
+                res.status(200).json({ message: "Post updated" });
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+);
+
+app.post(
+    "/api/deletePostById",
+    verifyToken,
+    [check("postId", "PostId is a required integer").notEmpty().isInt()],
+    async (req, res) => {
+        const postId = req.body.postId;
+        if (req.payload.role != ADMIN) {
+            return res.status(401).json({
+                message: "You are not authorized to delete a post",
+            });
+        }
+        try {
+            const valid = PostDao.deletePostById(postId);
+            if (!valid) {
+                res.status(500).json({
+                    message: "Error deleting post, please try again.",
+                });
+            }
+            res.status(200).json({ message: "Successfully deleted message" });
+        } catch (error) {
+            console.error("Internal server error");
+        }
+    }
+);
+
+// ------------------------------------------- ACCOUNT CONTROLLER -------------------------------------------
 app.post(
     "/api/accountCreation",
     [
@@ -337,102 +391,6 @@ app.post(
         } catch (error) {
             console.error("Internal Server Error:", error);
             res.status(500).json({ message: "Internal Server Error" });
-        }
-    }
-);
-
-app.post(
-    "/api/deletePostById",
-    verifyToken,
-    [check("postId", "PostId is a required integer").notEmpty().isInt()],
-    async (req, res) => {
-        const postId = req.body.postId;
-        if (req.payload.role != ADMIN) {
-            return res.status(401).json({
-                message: "You are not authorized to delete a post",
-            });
-        }
-        try {
-            const valid = PostDao.deletePostById(postId);
-            if (!valid) {
-                res.status(500).json({
-                    message: "Error deleting post, please try again.",
-                });
-            }
-            res.status(200).json({ message: "Successfully deleted message" });
-        } catch (error) {
-            console.error("Internal server error");
-        }
-    }
-);
-
-app.get("/api/post/:postId", async (req, res, next) => {
-    const { postId } = req.params;
-    try {
-        const post = await PostDao.getPostById(postId);
-        if (!post) {
-            res.status(500).json({
-                message: "Error getting post, please try again.",
-            });
-        }
-        if (post.restricted) {
-            verifyToken(req, res, next);
-            if (
-                req.payload.role === REQUESTED ||
-                req.payload.role === NON_PRIVILEGED
-            ) {
-                return res.status(403).json({
-                    message: "You are not authorized to view this post",
-                });
-            }
-        }
-
-        return res.status(200).json(post);
-    } catch (error) {
-        console.error("Internal server error");
-    }
-});
-
-app.put(
-    "/api/post/:postId",
-    verifyToken,
-    [
-        check("postData.title", "Title is a required field")
-            .notEmpty()
-            .trim()
-            .escape(),
-        check("postData.content", "Content is a required field")
-            .notEmpty()
-            .escape()
-            .trim(),
-    ],
-    async (req, res) => {
-        if (req.payload.role != ADMIN) {
-            return res.status(401).json({
-                message: "You are not authorized to update a post",
-            });
-        }
-        const { postId } = req.params;
-        const errors = validationResult(req);
-        const { title, content, restricted } = req.body.postData;
-
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        try {
-            const post = PostDao.updatedPost(
-                title,
-                content,
-                restricted,
-                req.payload.sub,
-                postId
-            );
-            if (post) {
-                res.status(200).json({ message: "Post updated" });
-            }
-        } catch (error) {
-            console.error(error);
         }
     }
 );
@@ -497,6 +455,7 @@ app.post("/api/logout", (req, res) => {
     });
 });
 
+// ------------------------------------------- MEDIA CONTROLLER -------------------------------------------
 app.get("/api/getPublicMedia/:postId", async (req, res, next) => {
     const { postId } = req.params;
     try {
@@ -550,7 +509,75 @@ app.post("/api/media/delete", async (req, res, next) => {
         });
     }
 });
+// const LOCAL_API = {
+//     ROOT_PATH: "/api",
+//     MEDIA: "/media",
 
+// }
+// const { MEDIA } = LOCAL_API
+
+// @todo update to /api/media
+// app.post(`${LOCAL_API.ROOT_PATH}${LOCAL_API.MEDIA}`)
+app.post("/upload", upload.array("photos", 10), async (req, res) => {
+    // if (req.payload.role != ADMIN) {
+    //     return res.status(403).json({
+    //         message: "You are not authorized to upload media",
+    //     });
+    // }
+    const files = req.files;
+    const postId = req.body.postId;
+    const restricted = req.body.restricted;
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+        process.env.AZURE_STORAGE_CONNECTION_STRING
+    );
+
+    try {
+        const containerClient = blobServiceClient.getContainerClient("media");
+        for (const file of files) {
+            const blobName = `blog-media/${file.originalname}`;
+            const blockBlobClient =
+                containerClient.getBlockBlobClient(blobName);
+            const uploadBlobResponse = await blockBlobClient.uploadFile(
+                file.path
+            );
+            let mediaInstance = await MediaDao.uploadMedia(
+                postId,
+                blobName,
+                file.mimetype,
+                restricted
+            );
+        }
+
+        res.status(200).json({
+            message: "File uploaded to Azure Blob storage.",
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error uploading the file." });
+    }
+});
+app.post("/api/mediaSAS", async (req, res) => {
+    const { blobName } = req.body;
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+        process.env.AZURE_STORAGE_CONNECTION_STRING
+    );
+    const containerClient = blobServiceClient.getContainerClient("media");
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const sasOptions = {
+        containerName: "media",
+        blobName: blobName,
+        startsOn: new Date(),
+        expiresOn: new Date(new Date().valueOf() + 86400),
+        permissions: BlobSASPermissions.parse("r"),
+    };
+
+    const sasToken = generateBlobSASQueryParameters(
+        sasOptions,
+        blobServiceClient.credential
+    ).toString();
+    const blobSasUrl = `${blockBlobClient.url}?${sasToken}`;
+    return res.status(200).json({ blobSasUrl });
+});
 app.use(express.static(path.join(__dirname, "public/")));
 
 app.get("*", (req, res) => {
