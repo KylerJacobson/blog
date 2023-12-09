@@ -6,6 +6,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import { ADMIN, PRIVILEGED } from "../constants/roleConstants";
 function Home() {
     const [posts, setPosts] = useState("");
+    const [refreshPosts, setRefreshPosts] = useState(false);
     const currentUser = useContext(AuthContext);
 
     useEffect(() => {
@@ -31,7 +32,11 @@ function Home() {
             }
         };
         getPosts();
-    }, [currentUser]);
+    }, [currentUser, refreshPosts]);
+
+    const handlePostDelete = () => {
+        setRefreshPosts((prev) => !prev); // Toggle the state to refresh posts
+    };
 
     return (
         <div className="home">
@@ -44,6 +49,7 @@ function Home() {
                         restricted={post.restricted}
                         postDate={post.created_at}
                         postId={post.post_id}
+                        onDelete={handlePostDelete}
                     />
                 ))
             ) : (
