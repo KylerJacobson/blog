@@ -7,8 +7,16 @@ const { expressjwt: ejwt } = require("express-jwt");
 const session = require("express-session");
 const UserDao = require("../server/models/userDao");
 const PostDao = require("../server/models/postDao");
+const MediaDao = require("../server/models/mediaDao");
 const dotenv = require("dotenv");
 require("dotenv").config();
+const multer = require("multer");
+const {
+    BlobServiceClient,
+    BlobSASPermissions,
+    generateBlobSASQueryParameters,
+} = require("@azure/storage-blob");
+const upload = multer({ dest: "uploads/" }); // Temporarily stores files in the 'uploads' directory
 
 const ADMIN = 1;
 const PRIVILEGED = 2;
@@ -64,6 +72,74 @@ const verifyToken = (req, res, next) => {
         res.status(401).send("Unauthorized: No token provided");
     }
 };
+
+app.post(
+    "/upload",
+    verifyToken,
+    upload.array("photos", 10),
+    async (req, res) => {
+        if (req.payload.role != ADMIN) {
+            return res.status(403).json({
+                message: "You are not authorized to upload media",
+            });
+        }
+        const files = req.files;
+        const postId = req.body.postId;
+        const restricted = req.body.restricted;
+        const blobServiceClient = BlobServiceClient.fromConnectionString(
+            process.env.AZURE_STORAGE_CONNECTION_STRING
+        );
+
+        try {
+            const containerClient =
+                blobServiceClient.getContainerClient("media");
+            for (const file of files) {
+                const blobName = `blog-media/${file.originalname}`;
+                const blockBlobClient =
+                    containerClient.getBlockBlobClient(blobName);
+                const uploadBlobResponse = await blockBlobClient.uploadFile(
+                    file.path
+                );
+                let mediaInstance = await MediaDao.uploadMedia(
+                    postId,
+                    blobName,
+                    file.mimetype,
+                    restricted
+                );
+            }
+
+            res.status(200).json({
+                message: "File uploaded to Azure Blob storage.",
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Error uploading the file." });
+        }
+    }
+);
+
+app.post("/api/mediaSAS", async (req, res) => {
+    const { blobName } = req.body;
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+        process.env.AZURE_STORAGE_CONNECTION_STRING
+    );
+    const containerClient = blobServiceClient.getContainerClient("media");
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const sasOptions = {
+        containerName: "media",
+        blobName: blobName,
+        startsOn: new Date(),
+        expiresOn: new Date(new Date().valueOf() + 86400),
+        permissions: BlobSASPermissions.parse("r"),
+    };
+
+    const sasToken = generateBlobSASQueryParameters(
+        sasOptions,
+        blobServiceClient.credential
+    ).toString();
+    const blobSasUrl = `${blockBlobClient.url}?${sasToken}`;
+    return res.status(200).json({ blobSasUrl });
+});
 
 app.get("/api/getUser", verifyToken, async (req, res) => {
     const userId = req.payload.sub;
@@ -179,7 +255,7 @@ app.post(
                 req.payload.sub
             );
             if (post) {
-                res.status(200).json({ message: "Post created" });
+                res.status(200).json(post[0].post_id);
             }
         } catch (error) {
             res.status(500).json({ message: "error: ", error });
@@ -419,6 +495,60 @@ app.post("/api/logout", (req, res) => {
         res.clearCookie("connect.sid");
         res.status(200).json({ message: "Logout was successful" });
     });
+});
+
+app.get("/api/getPublicMedia/:postId", async (req, res, next) => {
+    const { postId } = req.params;
+    try {
+        const media = await MediaDao.getMediaByPostId(postId);
+        for (i in media) {
+            if (media[i].restricted === true) {
+                return res.status(403).json({
+                    message: "You are not authorized to view this media",
+                });
+            }
+        }
+        return res.status(200).json(media);
+    } catch (error) {
+        console.error(`Internal server error: ${error.message}`);
+        return res.status(500).json({
+            message: "Internal server error while retrieving media",
+        });
+    }
+});
+
+app.get("/api/getPrivateMedia/:postId", verifyToken, async (req, res, next) => {
+    if (req.payload.role != ADMIN && req.payload.role != PRIVILEGED) {
+        return res.status(403).json({
+            message: "You are not authorized to retrieve private media",
+        });
+    }
+    const { postId } = req.params;
+    try {
+        const media = await MediaDao.getMediaByPostId(postId);
+        return res.status(200).json(media);
+    } catch (error) {
+        console.error(`Internal server error: ${error.message}`);
+        return res.status(500).json({
+            message: "Internal server error while retrieving media",
+        });
+    }
+});
+
+app.post("/api/media/delete", async (req, res, next) => {
+    const postId = req.body.postId;
+    const mediaId = req.body.mediaId;
+    try {
+        const media = await MediaDao.deleteMediaByMediaId(mediaId);
+        return res.status(200).json({
+            message: `Media ${mediaId} was successfully deleted`,
+        });
+    } catch (error) {
+        console.error(`Internal server error: ${error.message}`);
+        return res.status(500).json({
+            message: "Internal server error while retrieving media",
+        });
+    }
 });
 
 app.use(express.static(path.join(__dirname, "public/")));

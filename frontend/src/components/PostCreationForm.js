@@ -13,6 +13,7 @@ const PostCreationFrom = () => {
         content: "",
         restricted: "",
     });
+    const [media, setMedia] = useState([]);
 
     const {
         register,
@@ -30,6 +31,21 @@ const PostCreationFrom = () => {
                         content: data.content,
                         restricted: data.restricted,
                     });
+
+                    // Fetch Media
+                    let response;
+                    if (data.restricted) {
+                        response = await axios.get(
+                            `/api/getPrivateMedia/${postId}`
+                        );
+                    } else {
+                        response = await axios.get(
+                            `/api/getPublicMedia/${postId}`
+                        );
+                    }
+                    if (response.status === 200) {
+                        setMedia(response.data);
+                    }
                 } catch (error) {
                     console.error(error);
                 }
@@ -54,9 +70,51 @@ const PostCreationFrom = () => {
                 if (response.status === 200) {
                     navigate("/");
                 }
+                handleUpload(response.data, postData.restricted);
             }
         } catch (error) {
             console.error("There was an error submitting the form", error);
+        }
+    };
+    const [files, setFiles] = useState([]);
+    const handleFileChange = (event) => {
+        setFiles([...files, event.target.files[0]]);
+    };
+    const handleUpload = async (postId, restricted) => {
+        if (files) {
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append("photos", file);
+                formData.append("restricted", restricted);
+            }
+            formData.append("postId", postId);
+            try {
+                const response = await axios.post("/upload", formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+            } catch (error) {
+                alert("Error uploading file");
+            }
+        } else {
+            alert("Please select a file first");
+        }
+    };
+
+    const removeFile = async (mediaId, postId) => {
+        try {
+            const response = await axios.post("/api/media/delete", {
+                mediaId: mediaId,
+                postId: postId,
+            });
+            if (response.status === 200) {
+                setMedia((media) =>
+                    media.filter((content) => content.id !== mediaId)
+                );
+            }
+        } catch (error) {
+            console.error(error);
         }
     };
     return (
@@ -121,6 +179,37 @@ const PostCreationFrom = () => {
                     Submit
                 </button>
             </form>
+            <div>
+                <p>Uploaded Files</p>
+                <ul>
+                    {media.map((file) => {
+                        return (
+                            <li>
+                                {file.blob_name}{" "}
+                                <button
+                                    onClick={() =>
+                                        removeFile(file.id, file.post_id)
+                                    }
+                                    style={{ color: "red" }}
+                                >
+                                    X
+                                </button>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+            <div>
+                <input type="file" onChange={handleFileChange} />
+            </div>
+
+            <div>
+                <ul>
+                    {files.map((file) => {
+                        return <li>{file.name}</li>;
+                    })}
+                </ul>
+            </div>
         </div>
     );
 };

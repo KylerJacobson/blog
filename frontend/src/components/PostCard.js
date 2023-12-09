@@ -16,6 +16,7 @@ const PostCard = (props) => {
             postId,
         });
         if (response.status === 200) {
+            props.onDelete();
         } else {
             console.error("error deleting post, please try again");
         }

@@ -10,12 +10,14 @@ import { ADMIN } from "../constants/roleConstants";
 
 function Post() {
     const [post, setPost] = useState("");
+    const [media, setMedia] = useState([]);
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
 
     const { currentUser } = useContext(AuthContext);
     const { postId } = useParams();
+
     useEffect(() => {
         const getPost = async () => {
             try {
@@ -25,6 +27,9 @@ function Post() {
                 setPost(response.data);
                 if (response.status !== 200) {
                     setHasError(true);
+                }
+                if (media.length === 0) {
+                    fetchMedia(response.data);
                 }
             } catch (error) {
                 setHasError(true);
@@ -48,6 +53,26 @@ function Post() {
         } else {
             console.error("error deleting post, please try again");
         }
+    };
+
+    const fetchMedia = async (post) => {
+        let response;
+        if (post.restricted) {
+            response = await axios.get(`/api/getPrivateMedia/${post.post_id}`);
+        } else {
+            response = await axios.get(`/api/getPublicMedia/${post.post_id}`);
+        }
+        const sasMedia = [];
+        for (const media of response.data) {
+            const sasResponse = await axios.post("/api/mediaSAS", {
+                blobName: media.blob_name,
+            });
+            sasMedia.push({
+                url: sasResponse.data.blobSasUrl,
+                contentType: media.content_type,
+            });
+        }
+        setMedia(sasMedia);
     };
     return (
         <div className=" flex flex-col p-2 my-8 mx-auto bg-white shadow-lg xl:max-w-6xl px-5">
@@ -78,6 +103,26 @@ function Post() {
             </div>
             <div className="post-content mt-8">
                 <p>{post.content}</p>
+                {media.length > 0
+                    ? media.map((item, index) => (
+                          <div key={index}>
+                              {item.contentType === "image/jpeg" && (
+                                  <img src={item.url} alt="images for post" />
+                              )}
+                              {item.contentType === "video/mp4" && (
+                                  <video controls>
+                                      <source
+                                          src={item.url}
+                                          type={item.contentType}
+                                      ></source>
+                                      Your browser does not support the video
+                                      tag
+                                  </video>
+                              )}
+                              <br />
+                          </div>
+                      ))
+                    : " "}
             </div>
         </div>
     );
