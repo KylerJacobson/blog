@@ -8,7 +8,6 @@ const session = require("express-session");
 const UserDao = require("../server/models/userDao");
 const PostDao = require("../server/models/postDao");
 const MediaDao = require("../server/models/mediaDao");
-const dotenv = require("dotenv");
 const verifyToken = require("./helpers/authMiddleware");
 require("dotenv").config();
 const multer = require("multer");
@@ -47,31 +46,6 @@ app.use(
 );
 
 app.use("/api", router);
-
-// app.post(
-//     "/api/deleteUserById",
-//     verifyToken,
-//     [check("userId", "UserId is a required integer").notEmpty().isInt()],
-//     async (req, res) => {
-//         const userId = req.body.userId;
-//         if (req.payload.role != ADMIN) {
-//             return res.status(401).json({
-//                 message: "You are not authorized to delete users",
-//             });
-//         }
-//         try {
-//             const valid = UserDao.deleteUserById(userId);
-//             if (!valid) {
-//                 res.status(500).json({
-//                     message: "Error deleting post, please try again.",
-//                 });
-//             }
-//             res.status(200).json({ message: "Successfully deleted message" });
-//         } catch (error) {
-//             console.error("Internal server error");
-//         }
-//     }
-// );
 
 // ------------------------------------------- POST CONTROLLER -------------------------------------------
 app.post(
@@ -326,7 +300,7 @@ app.post(
             );
 
             req.session.token = token;
-            return res.json(token);
+            return res.status(200).json(token);
         } catch (err) {
             console.error(err.message);
             res.status(500).json({ message: "Internal Server Error" });
@@ -400,53 +374,51 @@ app.post("/api/media/delete", async (req, res, next) => {
         });
     }
 });
-// const LOCAL_API = {
-//     ROOT_PATH: "/api",
-//     MEDIA: "/media",
 
-// }
-// const { MEDIA } = LOCAL_API
-
-// @todo update to /api/media
-// app.post(`${LOCAL_API.ROOT_PATH}${LOCAL_API.MEDIA}`)
-app.post("/upload", upload.array("photos", 10), async (req, res) => {
-    // if (req.payload.role != ADMIN) {
-    //     return res.status(403).json({
-    //         message: "You are not authorized to upload media",
-    //     });
-    // }
-    const files = req.files;
-    const postId = req.body.postId;
-    const restricted = req.body.restricted;
-    const blobServiceClient = BlobServiceClient.fromConnectionString(
-        process.env.AZURE_STORAGE_CONNECTION_STRING
-    );
-
-    try {
-        const containerClient = blobServiceClient.getContainerClient("media");
-        for (const file of files) {
-            const blobName = `blog-media/${file.originalname}`;
-            const blockBlobClient =
-                containerClient.getBlockBlobClient(blobName);
-            const uploadBlobResponse = await blockBlobClient.uploadFile(
-                file.path
-            );
-            let mediaInstance = await MediaDao.uploadMedia(
-                postId,
-                blobName,
-                file.mimetype,
-                restricted
-            );
+app.post(
+    "/upload",
+    upload.array("photos", 10),
+    verifyToken,
+    async (req, res) => {
+        if (req.payload.role != ADMIN) {
+            return res.status(403).json({
+                message: "You are not authorized to upload media",
+            });
         }
+        const files = req.files;
+        const postId = req.body.postId;
+        const restricted = req.body.restricted;
+        const blobServiceClient = BlobServiceClient.fromConnectionString(
+            process.env.AZURE_STORAGE_CONNECTION_STRING
+        );
 
-        res.status(200).json({
-            message: "File uploaded to Azure Blob storage.",
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error uploading the file." });
+        try {
+            const containerClient =
+                blobServiceClient.getContainerClient("media");
+            for (const file of files) {
+                const blobName = `blog-media/${file.originalname}`;
+                const blockBlobClient =
+                    containerClient.getBlockBlobClient(blobName);
+                const uploadBlobResponse = await blockBlobClient.uploadFile(
+                    file.path
+                );
+                let mediaInstance = await MediaDao.uploadMedia(
+                    postId,
+                    blobName,
+                    file.mimetype,
+                    restricted
+                );
+            }
+
+            res.status(200).json({
+                message: "File uploaded to Azure Blob storage.",
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Error uploading the file." });
+        }
     }
-});
+);
 app.post("/api/mediaSAS", async (req, res) => {
     const { blobName } = req.body;
     const blobServiceClient = BlobServiceClient.fromConnectionString(

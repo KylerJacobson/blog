@@ -1,19 +1,38 @@
-const { Router } = require("express");
-const verifyToken = require("../helpers/authMiddleware");
 const UserDao = require("../models/userDao");
 
 const ADMIN = 1;
 
 class UserController {
     static async create(req, res) {
-        console.log("Creating A USER");
+        const { firstName, lastName, email, password, restricted } =
+            req.body.accountDetails;
+        try {
+            let user = await UserDao.getUserByEmail(email);
+            if (user) {
+                return res.status(409).json({ message: "User already exists" });
+            } else {
+                let userId = await UserDao.createUser(
+                    firstName,
+                    lastName,
+                    email,
+                    password,
+                    restricted
+                );
+                if (userId) {
+                    res.status(200).json({
+                        message: "Account successfully created",
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Internal Server Error:", error);
+            res.status(500).json({ message: "Internal Server Error" });
+        }
     }
 
     static async show(req, res) {
-        const userId = req.payload.sub;
-
         try {
-            const user = await UserDao.getUserById(userId);
+            const user = await UserDao.getUserById(req.payload.sub);
             if (user == false) {
                 return res.status(404).json({ message: "User not found" });
             } else {
@@ -42,13 +61,14 @@ class UserController {
         }
     }
 
-    // app.post("/api/completeUserAccessRequest", verifyToken, async (req, res) => {
-
-    // });
-
     static async update(req, res) {
+        console.log("Updating user backend");
         let { user, role } = req.body;
-        if (role && role !== user.role && req.payload.role === ADMIN) {
+        console.log(user);
+        console.log(role);
+        console.log("payload role: ", req.payload.role);
+        if (role !== null && role !== user.role && req.payload.role === ADMIN) {
+            console.log("updating role");
             user.role = role;
         }
 

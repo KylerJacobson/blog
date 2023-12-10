@@ -68,12 +68,9 @@ function RedirectToLogin(props) {
     useEffect(() => {
         const verifySession = async () => {
             try {
-                const { data: user } = await axios.get(
-                    `/api/user/${currentUser.id}`,
-                    {
-                        withCredentials: true,
-                    }
-                );
+                const { data: user } = await axios.get(`/api/user`, {
+                    withCredentials: true,
+                });
                 setCurrentUser(user);
             } catch (error) {
                 if (

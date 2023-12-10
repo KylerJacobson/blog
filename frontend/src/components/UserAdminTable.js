@@ -19,7 +19,7 @@ const UserAdminTable = () => {
 
     const handleRequest = async (user, role) => {
         try {
-            const response = await axios.put(`/api/user/${user.id}`, {
+            const response = await axios.put(`/api/user`, {
                 user: user,
                 role: role,
             });
