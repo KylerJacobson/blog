@@ -66,17 +66,18 @@ class UserDao {
         return rows;
     }
 
-    static async updateUserRole(id, role) {
+    static async updateUser(id, firstName, lastName, email, role) {
         try {
             const { rows } = await pool.query(
-                "UPDATE users SET role = $1 WHERE id = $2 RETURNING id",
-                [role, id]
+                "UPDATE users SET first_name = $1, last_name = $2, email = $3, role = $4 WHERE id = $5",
+                [firstName, lastName, email, role, id]
             );
             return rows;
         } catch (error) {
             console.error(`Error inserting into posts: ${error}`);
         }
     }
+
     static async createUser(
         firstName,
         lastName,

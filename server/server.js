@@ -9,6 +9,7 @@ const UserDao = require("../server/models/userDao");
 const PostDao = require("../server/models/postDao");
 const MediaDao = require("../server/models/mediaDao");
 const dotenv = require("dotenv");
+const verifyToken = require("./helpers/authMiddleware");
 require("dotenv").config();
 const multer = require("multer");
 const {
@@ -46,141 +47,31 @@ app.use(
 );
 
 app.use("/api", router);
-// @todo abstract out to library
-const verifyToken = (req, res, next) => {
-    const token = req.session.token;
-    if (token) {
-        jwt.verify(
-            token,
-            JWT_SECRET,
-            { algorithms: ["HS256"] },
-            (error, payload) => {
-                if (error) {
-                    console.error(error);
-                    if (error.name === "TokenExpiredError") {
-                        return res
-                            .status(401)
-                            .json({ message: "Unauthorized: Token expired" });
-                    } else {
-                        return res
-                            .status(401)
-                            .json({ message: "Unauthorized: Invalid token" });
-                    }
-                }
-                req.payload = payload;
-                next();
-            }
-        );
-    } else {
-        res.status(401).send("Unauthorized: No token provided");
-    }
-};
 
-// ------------------------------------------- USER CONTROLLER -------------------------------------------
-
-// @todo READ USERS
-// Create controller that responds to get a get request and returns a list of users
-// should return a comprehensive list or a specific user depending on the userId parameter (always return a list and check permission for admin use case)
-// app.get("/api/getUser", verifyToken, async (req, res) => {
-//     const userId = req.payload.sub;
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//         return res.status(400).json({ errors: errors.array() });
-//     }
-//     try {
-//         const user = await UserDao.getUserById(userId);
-//         if (user == false) {
-//             return res.status(404).json({ message: "User not found" });
-//         } else {
-//             return res.status(200).json(user);
+// app.post(
+//     "/api/deleteUserById",
+//     verifyToken,
+//     [check("userId", "UserId is a required integer").notEmpty().isInt()],
+//     async (req, res) => {
+//         const userId = req.body.userId;
+//         if (req.payload.role != ADMIN) {
+//             return res.status(401).json({
+//                 message: "You are not authorized to delete users",
+//             });
 //         }
-//     } catch (error) {
-//         res.status(500).send(error.message);
+//         try {
+//             const valid = UserDao.deleteUserById(userId);
+//             if (!valid) {
+//                 res.status(500).json({
+//                     message: "Error deleting post, please try again.",
+//                 });
+//             }
+//             res.status(200).json({ message: "Successfully deleted message" });
+//         } catch (error) {
+//             console.error("Internal server error");
+//         }
 //     }
-// });
-
-app.get("/api/getUser", verifyToken, async (req, res) => {
-    const userId = req.payload.sub;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const user = await UserDao.getUserById(userId);
-        if (user == false) {
-            return res.status(404).json({ message: "User not found" });
-        } else {
-            return res.status(200).json(user);
-        }
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-});
-
-app.get("/api/getUsers", verifyToken, async (req, res) => {
-    if (req.payload.role != ADMIN) {
-        return res.status(401).json({
-            message: "You are not authorized to retrieve all users",
-        });
-    }
-    try {
-        const users = await UserDao.getAllUsers();
-        if (users.length === 0) {
-            return res.status(404).json({ message: "Users not found" });
-        } else {
-            return res.status(200).json(users);
-        }
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-});
-
-app.post("/api/completeUserAccessRequest", verifyToken, async (req, res) => {
-    if (req.payload.role != ADMIN) {
-        return res.status(401).json({
-            message: "You are not authorized to complete access requests",
-        });
-    }
-    const userId = req.body.id;
-    const role = req.body.role;
-    try {
-        let response = await UserDao.updateUserRole(userId, role);
-        if (response) {
-            return res
-                .status(200)
-                .json({ message: "Successfully updated role" });
-        } else {
-            return res.status(500).json({ message: "Error updating role" });
-        }
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-});
-
-app.post(
-    "/api/deleteUserById",
-    verifyToken,
-    [check("userId", "UserId is a required integer").notEmpty().isInt()],
-    async (req, res) => {
-        const userId = req.body.userId;
-        if (req.payload.role != ADMIN) {
-            return res.status(401).json({
-                message: "You are not authorized to delete users",
-            });
-        }
-        try {
-            const valid = UserDao.deleteUserById(userId);
-            if (!valid) {
-                res.status(500).json({
-                    message: "Error deleting post, please try again.",
-                });
-            }
-            res.status(200).json({ message: "Successfully deleted message" });
-        } catch (error) {
-            console.error("Internal server error");
-        }
-    }
-);
+// );
 
 // ------------------------------------------- POST CONTROLLER -------------------------------------------
 app.post(

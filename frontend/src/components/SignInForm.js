@@ -2,12 +2,13 @@ import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import "./form.css";
 
 const SignInForm = () => {
     const [validLogin, setValidLogin] = useState();
-    const { currentUser, setCurrentUser } = useContext(AuthContext);
+    const { setCurrentUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const {
@@ -22,17 +23,13 @@ const SignInForm = () => {
                 formData,
             });
             setValidLogin(true);
-            const { data: userData } = await axios.get("/api/getUser/", {
+            const decoded = jwtDecode(token);
+            // @todo look at sending token to the server here
+            const { data: user } = await axios.get(`/api/user/${decoded.sub}`, {
                 withCredentials: true,
             });
-            const { firstName, lastName, email, role } = userData;
-            setCurrentUser({
-                firstName,
-                lastName,
-                email,
-                role,
-                token,
-            });
+            // const { firstName, lastName, email, role } = userData;
+            setCurrentUser(user); // @follow-up changed to user object, will need to update references
             navigate("/");
         } catch (error) {
             console.error("There was an error submitting the form", error);

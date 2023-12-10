@@ -8,24 +8,21 @@ import {
     REQUESTED,
 } from "../constants/roleConstants";
 
-const CustomerAdminTable = () => {
+const UserAdminTable = () => {
     const [data, setData] = useState([]);
     const fetchUsers = async () => {
-        const response = await axios.get("/api/getUsers", {
+        const response = await axios.get("/api/user/list", {
             withCredentials: true,
         });
         setData(response.data);
     };
 
-    const handleRequest = async (id, role) => {
+    const handleRequest = async (user, role) => {
         try {
-            const response = await axios.post(
-                "/api/completeUserAccessRequest",
-                {
-                    id: id,
-                    role: role,
-                }
-            );
+            const response = await axios.put(`/api/user/${user.id}`, {
+                user: user,
+                role: role,
+            });
             if (response.status === 200) {
                 fetchUsers();
             }
@@ -35,9 +32,7 @@ const CustomerAdminTable = () => {
     };
     const deleteUser = async (userId) => {
         try {
-            const response = await axios.post("/api/deleteUserById", {
-                userId,
-            });
+            const response = await axios.delete(`/api/user/${userId}`);
             if (response.status === 200) {
                 fetchUsers();
             }
@@ -77,27 +72,25 @@ const CustomerAdminTable = () => {
                 </tr>
             </thead>
             <tbody className="text-gray-700">
-                {data?.map((customer, index) => (
+                {data?.map((user, index) => (
                     <tr
                         className={
-                            customer.role === REQUESTED
+                            user.role === REQUESTED
                                 ? "bg-yellow-200"
                                 : "even:bg-gray-200 odd:bg-gray-100 "
                         }
                         key={index}
                     >
                         <td>
-                            {customer.first_name} {customer.last_name}
+                            {user.first_name} {user.last_name}
                         </td>
-                        <td>{customer.email}</td>
-                        <td>{formatRole(customer.role)}</td>
-                        <td>{formatDate(customer.created_at)}</td>
+                        <td>{user.email}</td>
+                        <td>{formatRole(user.role)}</td>
+                        <td>{formatDate(user.created_at)}</td>
                         <td>
                             <button
                                 className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
-                                onClick={() =>
-                                    handleRequest(customer.id, PRIVILEGED)
-                                }
+                                onClick={() => handleRequest(user, PRIVILEGED)}
                             >
                                 Approve
                             </button>
@@ -106,7 +99,7 @@ const CustomerAdminTable = () => {
                             <button
                                 className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
                                 onClick={() =>
-                                    handleRequest(customer.id, NON_PRIVILEGED)
+                                    handleRequest(user, NON_PRIVILEGED)
                                 }
                             >
                                 Deny
@@ -115,7 +108,7 @@ const CustomerAdminTable = () => {
                         <td>
                             <button
                                 className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
-                                onClick={() => deleteUser(customer.id)}
+                                onClick={() => deleteUser(user.id)}
                             >
                                 Delete User
                             </button>
@@ -127,4 +120,4 @@ const CustomerAdminTable = () => {
     );
 };
 
-export default CustomerAdminTable;
+export default UserAdminTable;
