@@ -18,7 +18,7 @@ const SignInForm = () => {
 
     const signIn = async (formData) => {
         try {
-            const response = await axios.post("/api/signIn", {
+            const response = await axios.post("/api/session", {
                 formData,
             });
             if (response.status !== 200) {

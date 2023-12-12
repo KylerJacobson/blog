@@ -14,7 +14,7 @@ function NavigationBar() {
     async function handleClick() {
         if (currentUser) {
             try {
-                await axios.post("/api/logout", {
+                await axios.delete("/api/session", {
                     withCredentials: true,
                 });
                 setCurrentUser(null);

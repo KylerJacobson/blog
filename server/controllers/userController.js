@@ -3,15 +3,19 @@ const UserDao = require("../models/userDao");
 const ADMIN = 1;
 
 class UserController {
-    static async create(req, res) {
+    constructor(userDao) {
+        this.userDao = userDao;
+    }
+
+    async create(req, res) {
         const { firstName, lastName, email, password, restricted } =
             req.body.accountDetails;
         try {
-            let user = await UserDao.getUserByEmail(email);
+            let user = await this.userDao.getUserByEmail(email);
             if (user) {
                 return res.status(409).json({ message: "User already exists" });
             } else {
-                let userId = await UserDao.createUser(
+                let userId = await this.userDao.createUser(
                     firstName,
                     lastName,
                     email,
@@ -30,9 +34,10 @@ class UserController {
         }
     }
 
-    static async show(req, res) {
+    async show(req, res) {
+        const userId = req.payload.sub;
         try {
-            const user = await UserDao.getUserById(req.payload.sub);
+            const user = await this.userDao.getUserById(userId);
             if (user == false) {
                 return res.status(404).json({ message: "User not found" });
             } else {
@@ -43,14 +48,14 @@ class UserController {
         }
     }
 
-    static async list(req, res) {
+    async list(req, res) {
         if (req.payload.role != ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to retrieve all users",
             });
         }
         try {
-            const users = await UserDao.getAllUsers();
+            const users = await this.userDao.getAllUsers();
             if (users.length === 0) {
                 return res.status(404).json({ message: "Users not found" });
             } else {
@@ -61,19 +66,14 @@ class UserController {
         }
     }
 
-    static async update(req, res) {
-        console.log("Updating user backend");
+    async update(req, res) {
         let { user, role } = req.body;
-        console.log(user);
-        console.log(role);
-        console.log("payload role: ", req.payload.role);
         if (role !== null && role !== user.role && req.payload.role === ADMIN) {
-            console.log("updating role");
             user.role = role;
         }
 
         try {
-            let response = await UserDao.updateUser(
+            let response = await this.userDao.updateUser(
                 user.id,
                 user.first_name,
                 user.last_name,
@@ -92,7 +92,7 @@ class UserController {
         }
     }
 
-    static async destroy(req, res) {
+    async destroy(req, res) {
         const userId = req.params.userId;
         if (req.payload.role != ADMIN) {
             return res.status(401).json({
@@ -100,7 +100,7 @@ class UserController {
             });
         }
         try {
-            const valid = UserDao.deleteUserById(userId);
+            const valid = this.userDao.deleteUserById(userId);
             if (!valid) {
                 res.status(500).json({
                     message: "Error deleting post, please try again.",

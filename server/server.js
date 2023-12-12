@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const { expressjwt: ejwt } = require("express-jwt");
 const session = require("express-session");
 const UserDao = require("../server/models/userDao");
+const UserController = require("./controllers/userController");
+const SessionController = require("./controllers/sessionController");
 const PostDao = require("../server/models/postDao");
 const MediaDao = require("../server/models/mediaDao");
 const verifyToken = require("./helpers/authMiddleware");
@@ -16,7 +18,6 @@ const {
     BlobSASPermissions,
     generateBlobSASQueryParameters,
 } = require("@azure/storage-blob");
-const router = require("./router");
 const upload = multer({ dest: "uploads/" }); // Temporarily stores files in the 'uploads' directory
 
 const ADMIN = 1;
@@ -45,9 +46,35 @@ app.use(
     })
 );
 
-app.use("/api", router);
+// ------------------------------------------- User Routes -------------------------------------------
 
-// ------------------------------------------- POST CONTROLLER -------------------------------------------
+const userDao = new UserDao();
+const userController = new UserController(userDao);
+
+const sessionController = new SessionController(userDao);
+
+app.post("/api/user", userController.create);
+
+app.get("/api/user/list", verifyToken, (req, res) =>
+    userController.list(req, res)
+);
+
+app.get("/api/user", verifyToken, (req, res) => userController.show(req, res));
+
+app.put("/api/user", verifyToken, (req, res) =>
+    userController.update(req, res)
+);
+
+app.delete("/api/user/:userId", verifyToken, (req, res) =>
+    userController.destroy(req, res)
+);
+
+// ------------------------------------------- Session Routes -------------------------------------------
+
+app.post("/api/session", sessionController.create.bind(sessionController));
+
+app.delete("/api/session", sessionController.destroy.bind(sessionController));
+
 app.post(
     "/api/postCreation",
     [
@@ -205,120 +232,6 @@ app.post(
         }
     }
 );
-
-// ------------------------------------------- ACCOUNT CONTROLLER -------------------------------------------
-app.post(
-    "/api/accountCreation",
-    [
-        check("accountDetails.firstName", "First name is a required field")
-            .notEmpty()
-            .escape()
-            .trim(),
-        check("accountDetails.lastName", "Last name is a required field")
-            .notEmpty()
-            .escape()
-            .trim(),
-        check("accountDetails.email", "Email is a required field")
-            .notEmpty()
-            .escape()
-            .trim()
-            .isEmail(),
-        check("accountDetails.password", "Password is a required field")
-            .notEmpty()
-            .escape()
-            .trim(),
-    ],
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-        const { firstName, lastName, email, password, restricted } =
-            req.body.accountDetails;
-        try {
-            let user = await UserDao.getUserByEmail(email);
-            if (user) {
-                return res.status(409).json({ message: "User already exists" });
-            } else {
-                let userId = await UserDao.createUser(
-                    firstName,
-                    lastName,
-                    email,
-                    password,
-                    restricted
-                );
-                if (userId) {
-                    res.status(200).json({
-                        message: "Account successfully created",
-                    });
-                }
-            }
-        } catch (error) {
-            console.error("Internal Server Error:", error);
-            res.status(500).json({ message: "Internal Server Error" });
-        }
-    }
-);
-
-app.post(
-    "/api/signIn",
-    [
-        check("formData.email", "A valid email is a required field")
-            .notEmpty()
-            .escape()
-            .trim()
-            .isEmail(),
-        check("formData.password", "Password is a required field")
-            .notEmpty()
-            .escape()
-            .trim(),
-    ],
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        const { email, password } = req.body.formData;
-
-        try {
-            const user = await UserDao.loginUser(email, password);
-
-            if (user == false) {
-                return res.status(401).json({ message: "Invalid Credentials" });
-            }
-
-            const token = jwt.sign(
-                {
-                    iss: "kylerjacobson.dev",
-                    aud: "kylerjacobson.dev",
-                    sub: user.id,
-                    role: user.role,
-                },
-                JWT_SECRET,
-                { expiresIn: "1hr" }
-            );
-
-            req.session.token = token;
-            return res.status(200).json(token);
-        } catch (err) {
-            console.error(err.message);
-            res.status(500).json({ message: "Internal Server Error" });
-        }
-    }
-);
-
-app.post("/api/logout", (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res
-                .status(500)
-                .json({ message: "Error logging out, try again" });
-        }
-        res.clearCookie("connect.sid");
-        res.status(200).json({ message: "Logout was successful" });
-    });
-});
 
 // ------------------------------------------- MEDIA CONTROLLER -------------------------------------------
 app.get("/api/getPublicMedia/:postId", async (req, res, next) => {
