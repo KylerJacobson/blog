@@ -35,17 +35,20 @@ class UserController {
     }
 
     async show(req, res) {
-        const userId = req.payload.sub;
-        try {
-            const user = await this.userDao.getUserById(userId);
-            if (user == false) {
-                return res.status(404).json({ message: "User not found" });
-            } else {
-                return res.status(200).json(user);
+        if (req.isAuthenticated) {
+            const userId = req.payload.sub;
+            try {
+                const user = await this.userDao.getUserById(userId);
+                if (user == false) {
+                    return res.status(404).json({ message: "User not found" });
+                } else {
+                    return res.status(200).json(user);
+                }
+            } catch (error) {
+                res.status(500).send(error.message);
             }
-        } catch (error) {
-            res.status(500).send(error.message);
         }
+        return res.status(403).json({ message: "User not authenticated " });
     }
 
     async list(req, res) {

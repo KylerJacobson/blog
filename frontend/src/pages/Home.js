@@ -12,21 +12,10 @@ function Home() {
     useEffect(() => {
         const getPosts = async () => {
             try {
-                if (
-                    currentUser &&
-                    (currentUser?.currentUser?.role === PRIVILEGED ||
-                        currentUser?.currentUser?.role === ADMIN)
-                ) {
-                    const response = await axios.get("/api/getAllRecentPosts", {
-                        withCredentials: true,
-                    });
-                    setPosts(response.data);
-                } else {
-                    const response = await axios.get(
-                        "/api/getPublicRecentPosts"
-                    );
-                    setPosts(response.data);
-                }
+                const response = await axios.get("/api/posts", {
+                    withCredentials: true,
+                });
+                setPosts(response.data);
             } catch (error) {
                 console.error("There was an error submitting the form", error);
             }

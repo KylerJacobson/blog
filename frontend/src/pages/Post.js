@@ -21,7 +21,7 @@ function Post() {
     useEffect(() => {
         const getPost = async () => {
             try {
-                const response = await axios.get(`/api/post/${postId}`, {
+                const response = await axios.get(`/api/posts/${postId}`, {
                     withCredentials: true,
                 });
                 setPost(response.data);
@@ -46,9 +46,7 @@ function Post() {
     };
 
     const deletePost = async () => {
-        const response = await axios.post("/api/deletePostById", {
-            postId,
-        });
+        const response = await axios.delete(`/api/posts/${postId}`);
         if (response.status === 200) {
         } else {
             console.error("error deleting post, please try again");
@@ -57,22 +55,11 @@ function Post() {
 
     const fetchMedia = async (post) => {
         let response;
-        if (post.restricted) {
-            response = await axios.get(`/api/getPrivateMedia/${post.post_id}`);
-        } else {
-            response = await axios.get(`/api/getPublicMedia/${post.post_id}`);
-        }
-        const sasMedia = [];
-        for (const media of response.data) {
-            const sasResponse = await axios.post("/api/mediaSAS", {
-                blobName: media.blob_name,
-            });
-            sasMedia.push({
-                url: sasResponse.data.blobSasUrl,
-                contentType: media.content_type,
-            });
-        }
-        setMedia(sasMedia);
+        response = await axios.get(`/api/media/${post.post_id}`, {
+            withCredentials: true,
+        });
+
+        setMedia(response.data);
     };
     return (
         <div className=" flex flex-col p-2 my-8 mx-auto bg-white shadow-lg xl:max-w-6xl px-5">
@@ -106,14 +93,14 @@ function Post() {
                 {media.length > 0
                     ? media.map((item, index) => (
                           <div key={index}>
-                              {item.contentType === "image/jpeg" && (
+                              {item.content_type === "image/jpeg" && (
                                   <img src={item.url} alt="images for post" />
                               )}
-                              {item.contentType === "video/mp4" && (
+                              {item.content_type === "video/mp4" && (
                                   <video controls>
                                       <source
                                           src={item.url}
-                                          type={item.contentType}
+                                          type={item.content_type}
                                       ></source>
                                       Your browser does not support the video
                                       tag

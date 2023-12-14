@@ -1,5 +1,4 @@
 const { Pool } = require("pg");
-const dotenv = require("dotenv");
 require("dotenv").config();
 
 const pool = new Pool({
@@ -10,7 +9,7 @@ const pool = new Pool({
 });
 
 class MediaDao {
-    static async uploadMedia(postId, blobName, contentType, restricted) {
+    async uploadMedia(postId, blobName, contentType, restricted) {
         try {
             const { rows } = await pool.query(
                 "INSERT INTO media (post_id, blob_name, content_type, restricted) VALUES ($1, $2, $3, $4) RETURNING *",
@@ -24,7 +23,7 @@ class MediaDao {
         }
     }
 
-    static async getMediaByPostId(postId) {
+    async getMediaByPostId(postId) {
         try {
             const { rows } = await pool.query(
                 "SELECT * FROM media WHERE post_id = $1",
@@ -38,7 +37,7 @@ class MediaDao {
         }
     }
 
-    static async deleteMediaByMediaId(id) {
+    async deleteMediaByMediaId(id) {
         try {
             const { rowCount } = await pool.query(
                 "DELETE FROM media where id = $1",

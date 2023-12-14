@@ -9,7 +9,6 @@ class SessionController {
     }
     async create(req, res) {
         const { email, password } = req.body.formData;
-
         try {
             const user = await this.userDao.loginUser(email, password);
             if (user == false) {

@@ -11,10 +11,8 @@ const PostCard = (props) => {
     const navigate = useNavigate();
 
     const deletePost = async () => {
-        const postId = props.postId;
-        const response = await axios.post("/api/deletePostById", {
-            postId,
-        });
+        const id = props.postId;
+        const response = await axios.delete(`/api/posts/${id}`);
         if (response.status === 200) {
             props.onDelete();
         } else {
