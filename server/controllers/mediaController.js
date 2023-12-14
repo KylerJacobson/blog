@@ -4,8 +4,8 @@ const {
     BlobSASPermissions,
     generateBlobSASQueryParameters,
 } = require("@azure/storage-blob");
-const ADMIN = 1;
-const PRIVILEGED = 2;
+
+const { ROLE } = require("../constants/roleConstants");
 
 class MediaController {
     constructor(mediaDao) {
@@ -13,7 +13,7 @@ class MediaController {
     }
 
     async create(req, res) {
-        if (req.payload.role != ADMIN) {
+        if (req.payload.role != ROLE.ADMIN) {
             return res.status(403).json({
                 message: "You are not authorized to upload media",
             });
@@ -61,7 +61,7 @@ class MediaController {
                 if (media[i].restricted === true) {
                     if (
                         !req.isAuthenticated ||
-                        (role !== ADMIN && role !== PRIVILEGED)
+                        (role !== ROLE.ADMIN && role !== ROLE.PRIVILEGED)
                     ) {
                         return res.status(403).json({
                             message:

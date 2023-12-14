@@ -3,7 +3,6 @@ import "./Home.css";
 import axios from "axios";
 import PostCard from "../components/PostCard";
 import { AuthContext } from "../contexts/AuthContext";
-import { ADMIN, PRIVILEGED } from "../constants/roleConstants";
 function Home() {
     const [posts, setPosts] = useState("");
     const [refreshPosts, setRefreshPosts] = useState(false);

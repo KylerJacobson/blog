@@ -2,27 +2,21 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const session = require("express-session");
+const multer = require("multer");
+require("dotenv").config();
+
 const UserDao = require("../server/models/userDao");
+const PostDao = require("../server/models/postDao");
+const MediaDao = require("../server/models/mediaDao");
 const UserController = require("./controllers/userController");
 const SessionController = require("./controllers/sessionController");
 const PostController = require("./controllers/postController");
-const PostDao = require("../server/models/postDao");
-const MediaDao = require("../server/models/mediaDao");
-const verifyToken = require("./helpers/authMiddleware");
-require("dotenv").config();
-const multer = require("multer");
-const {
-    BlobServiceClient,
-    BlobSASPermissions,
-    generateBlobSASQueryParameters,
-} = require("@azure/storage-blob");
 const MediaController = require("./controllers/mediaController");
-const upload = multer({ dest: "uploads/" });
+const verifyToken = require("./helpers/authMiddleware");
 
-const ADMIN = 1;
 const SESSION_SECRET = process.env.SessionSecret;
 const COOKIE_SECURITY = process.env.CookieSecurity === "true";
-
+const upload = multer({ dest: "uploads/" });
 const port = process.env.PORT || 8080;
 const userDao = new UserDao();
 const postDao = new PostDao();

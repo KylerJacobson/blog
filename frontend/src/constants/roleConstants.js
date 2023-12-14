@@ -1,4 +1,8 @@
-export const NON_PRIVILEGED = 0;
-export const PRIVILEGED = 2;
-export const ADMIN = 1;
-export const REQUESTED = -1;
+const ROLE = {
+    REQUESTED: -1,
+    NON_PRIVILEGED: 0,
+    ADMIN: 1,
+    PRIVILEGED: 2,
+};
+
+module.exports = { ROLE };

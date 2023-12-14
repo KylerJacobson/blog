@@ -6,7 +6,7 @@ import formatDate from "../helpers/helpers";
 import "./Post.css";
 import ErrorComponent from "../components/ErrorComponent";
 import { useNavigate } from "react-router-dom";
-import { ADMIN } from "../constants/roleConstants";
+import { ROLE } from "../constants/roleConstants";
 
 function Post() {
     const [post, setPost] = useState("");
@@ -70,7 +70,7 @@ function Post() {
                     {post ? "by Kyler Jacobson" : ""}
                 </p>
                 <div>
-                    {currentUser?.role === ADMIN && (
+                    {currentUser?.role === ROLE.ADMIN && (
                         <button
                             className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
                             onClick={editPost}
@@ -78,7 +78,7 @@ function Post() {
                             Edit Post
                         </button>
                     )}{" "}
-                    {currentUser?.role === ADMIN && (
+                    {currentUser?.role === ROLE.ADMIN && (
                         <button
                             className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
                             onClick={deletePost}

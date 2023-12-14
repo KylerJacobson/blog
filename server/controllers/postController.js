@@ -1,8 +1,4 @@
-const PostDao = require("../models/postDao");
-const verifyToken = require("../helpers/authMiddleware");
-
-const ADMIN = 1;
-const PRIVILEGED = 2;
+const { ROLE } = require("../constants/roleConstants");
 
 class PostController {
     constructor(postDao) {
@@ -11,7 +7,7 @@ class PostController {
 
     async create(req, res) {
         const { title, content, restricted } = req.body.postData;
-        if (req.payload.role != ADMIN) {
+        if (req.payload.role != ROLE.ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to create a post",
             });
@@ -33,8 +29,8 @@ class PostController {
     }
     async list(req, res, next) {
         if (
-            (req.isAuthenticated && req?.payload?.role === ADMIN) ||
-            req?.payload?.role === PRIVILEGED
+            (req.isAuthenticated && req?.payload?.role === ROLE.ADMIN) ||
+            req?.payload?.role === ROLE.PRIVILEGED
         ) {
             try {
                 let posts = await this.postDao.getAllRecentPosts();
@@ -74,7 +70,7 @@ class PostController {
             if (post.restricted) {
                 if (
                     req.isAuthenticated === false ||
-                    (role !== ADMIN && role !== PRIVILEGED)
+                    (role !== ROLE.ADMIN && role !== ROLE.PRIVILEGED)
                 ) {
                     return res.status(403).json({
                         message: "You are not authorized to view this post",
@@ -89,7 +85,7 @@ class PostController {
     }
 
     async update(req, res) {
-        if (req.payload.role != ADMIN) {
+        if (req.payload.role != ROLE.ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to update a post",
             });
@@ -115,7 +111,7 @@ class PostController {
 
     async destroy(req, res) {
         const { id } = req.params;
-        if (req.payload.role != ADMIN) {
+        if (req.payload.role != ROLE.ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to delete a post",
             });

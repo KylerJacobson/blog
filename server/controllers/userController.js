@@ -1,6 +1,4 @@
-const UserDao = require("../models/userDao");
-
-const ADMIN = 1;
+const { ROLE } = require("../constants/roleConstants");
 
 class UserController {
     constructor(userDao) {
@@ -52,7 +50,7 @@ class UserController {
     }
 
     async list(req, res) {
-        if (req.payload.role != ADMIN) {
+        if (req.payload.role != ROLE.ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to retrieve all users",
             });
@@ -71,7 +69,11 @@ class UserController {
 
     async update(req, res) {
         let { user, role } = req.body;
-        if (role !== null && role !== user.role && req.payload.role === ADMIN) {
+        if (
+            role !== null &&
+            role !== user.role &&
+            req.payload.role === ROLE.ADMIN
+        ) {
             user.role = role;
         }
 
@@ -97,7 +99,7 @@ class UserController {
 
     async destroy(req, res) {
         const userId = req.params.userId;
-        if (req.payload.role != ADMIN) {
+        if (req.payload.role != ROLE.ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to delete users",
             });

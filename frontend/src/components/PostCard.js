@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../contexts/AuthContext";
-import { ADMIN } from "../constants/roleConstants";
+import { ROLE } from "../constants/roleConstants";
 import formatDate from "../helpers/helpers";
 import "./PostCard.css";
 
@@ -58,7 +58,7 @@ const PostCard = (props) => {
             )}
             <p>Posted at: {formatDate(props.postDate)}</p>
             <div>
-                {currentUser?.role === ADMIN && (
+                {currentUser?.role === ROLE.ADMIN && (
                     <button
                         className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
                         onClick={editPost}
@@ -66,7 +66,7 @@ const PostCard = (props) => {
                         Edit Post
                     </button>
                 )}{" "}
-                {currentUser?.role === ADMIN && (
+                {currentUser?.role === ROLE.ADMIN && (
                     <button
                         className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
                         onClick={deletePost}

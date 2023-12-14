@@ -2,11 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import formatDate from "../helpers/helpers";
 
-import {
-    NON_PRIVILEGED,
-    PRIVILEGED,
-    REQUESTED,
-} from "../constants/roleConstants";
+import { ROLE } from "../constants/roleConstants";
 
 const UserAdminTable = () => {
     const [data, setData] = useState([]);
@@ -75,7 +71,7 @@ const UserAdminTable = () => {
                 {data?.map((user, index) => (
                     <tr
                         className={
-                            user.role === REQUESTED
+                            user.role === ROLE.REQUESTED
                                 ? "bg-yellow-200"
                                 : "even:bg-gray-200 odd:bg-gray-100 "
                         }
@@ -90,7 +86,9 @@ const UserAdminTable = () => {
                         <td>
                             <button
                                 className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
-                                onClick={() => handleRequest(user, PRIVILEGED)}
+                                onClick={() =>
+                                    handleRequest(user, ROLE.PRIVILEGED)
+                                }
                             >
                                 Approve
                             </button>
@@ -99,7 +97,7 @@ const UserAdminTable = () => {
                             <button
                                 className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
                                 onClick={() =>
-                                    handleRequest(user, NON_PRIVILEGED)
+                                    handleRequest(user, ROLE.NON_PRIVILEGED)
                                 }
                             >
                                 Deny

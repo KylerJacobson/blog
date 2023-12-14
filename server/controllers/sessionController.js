@@ -1,4 +1,3 @@
-const UserDao = require("../models/userDao");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWTSecret;
 require("dotenv").config();
