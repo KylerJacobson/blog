@@ -26,6 +26,12 @@ const sessionController = new SessionController(userDao);
 const postController = new PostController(postDao);
 const mediaController = new MediaController(mediaDao);
 
+const LOCAL_API = "/api";
+const USER_PATH = "/user";
+const MEDIA_PATH = "/media";
+const SESSION_PATH = "/session";
+const POST_PATH = "/posts";
+
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "public/")));
@@ -45,62 +51,71 @@ app.use(
 
 // --------------------------------------------- User Routes --------------------------------------------
 
-app.post("/api/user", userController.create);
+app.post(`${LOCAL_API}${USER_PATH}`, userController.create);
 
-app.get("/api/user/list", verifyToken, (req, res) =>
+app.get(`${LOCAL_API}${USER_PATH}/list`, verifyToken, (req, res) =>
     userController.list(req, res)
 );
 
-app.get("/api/user", verifyToken, (req, res) => userController.show(req, res));
+app.get(`${LOCAL_API}${USER_PATH}`, verifyToken, (req, res) =>
+    userController.show(req, res)
+);
 
-app.put("/api/user", verifyToken, (req, res) =>
+app.put(`${LOCAL_API}${USER_PATH}`, verifyToken, (req, res) =>
     userController.update(req, res)
 );
 
-app.delete("/api/user/:userId", verifyToken, (req, res) =>
+app.delete(`${LOCAL_API}${USER_PATH}/:userId`, verifyToken, (req, res) =>
     userController.destroy(req, res)
 );
 
 // ------------------------------------------- Session Routes -------------------------------------------
 
-app.post("/api/session", (req, res) => sessionController.create(req, res));
+app.post(`${LOCAL_API}${SESSION_PATH}`, (req, res) =>
+    sessionController.create(req, res)
+);
 
-app.delete("/api/session", (req, res) => sessionController.destroy(req, res));
+app.delete(`${LOCAL_API}${SESSION_PATH}`, (req, res) =>
+    sessionController.destroy(req, res)
+);
 
 // --------------------------------------------- Post Routes --------------------------------------------
 
-app.post("/api/posts", verifyToken, (req, res) =>
+app.post(`${LOCAL_API}${POST_PATH}`, verifyToken, (req, res) =>
     postController.create(req, res)
 );
 
-app.get("/api/posts", verifyToken, (req, res, next) =>
+app.get(`${LOCAL_API}${POST_PATH}`, verifyToken, (req, res, next) =>
     postController.list(req, res, next)
 );
 
-app.get("/api/posts/:id", verifyToken, (req, res) =>
+app.get(`${LOCAL_API}${POST_PATH}/:id`, verifyToken, (req, res) =>
     postController.show(req, res)
 );
 
-app.put("/api/posts/:id", verifyToken, (req, res) =>
+app.put(`${LOCAL_API}${POST_PATH}/:id`, verifyToken, (req, res) =>
     postController.update(req, res)
 );
 
-app.delete("/api/posts/:id", verifyToken, (req, res) =>
+app.delete(`${LOCAL_API}${POST_PATH}/:id`, verifyToken, (req, res) =>
     postController.destroy(req, res)
 );
 
 // ------------------------------------------- Media Routes -------------------------------------------
 
-app.get("/api/media/:postId", verifyToken, (req, res) =>
+app.get(`${LOCAL_API}${MEDIA_PATH}/:postId`, verifyToken, (req, res) =>
     mediaController.show(req, res)
 );
 
-app.delete("/api/media/:mediaId", verifyToken, (req, res) =>
+app.delete(`${LOCAL_API}${MEDIA_PATH}/:mediaId`, verifyToken, (req, res) =>
     mediaController.destroy(req, res)
 );
 
-app.post("/api/media", upload.array("photos", 10), verifyToken, (req, res) =>
-    mediaController.create(req, res)
+app.post(
+    `${LOCAL_API}${MEDIA_PATH}`,
+    upload.array("photos", 10),
+    verifyToken,
+    (req, res) => mediaController.create(req, res)
 );
 
 app.use(express.static(path.join(__dirname, "public/")));
