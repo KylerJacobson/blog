@@ -1,5 +1,4 @@
 const { Pool } = require("pg");
-const dotenv = require("dotenv");
 require("dotenv").config();
 
 const pool = new Pool({
@@ -10,7 +9,7 @@ const pool = new Pool({
 });
 
 class PostDao {
-    static async createPost(title, content, restricted, userId) {
+    async createPost(title, content, restricted, userId) {
         try {
             const { rows } = await pool.query(
                 "INSERT INTO posts (title, content, restricted, user_id) VALUES ($1, $2, $3, $4) RETURNING *",
@@ -22,18 +21,19 @@ class PostDao {
         }
     }
 
-    static async updatedPost(title, content, restricted, userId, postId) {
+    async updatePost(title, content, restricted, userId, postId) {
         try {
             const { rows } = await pool.query(
                 "UPDATE posts SET title = $1, content = $2, restricted = $3, user_id = $4 WHERE post_id = $5 RETURNING *",
                 [title, content, restricted, userId, postId]
             );
+            return rows;
         } catch (error) {
             console.error(`Error inserting into posts: ${error}`);
         }
     }
 
-    static async getRecentPublicPosts() {
+    async getRecentPublicPosts() {
         try {
             const { rows } = await pool.query(
                 "SELECT * FROM posts WHERE restricted = false ORDER BY created_at DESC LIMIT 10"
@@ -44,7 +44,7 @@ class PostDao {
         }
     }
 
-    static async getAllRecentPosts() {
+    async getAllRecentPosts() {
         try {
             const { rows } = await pool.query(
                 "SELECT * FROM posts ORDER BY created_at DESC LIMIT 10"
@@ -55,7 +55,7 @@ class PostDao {
         }
     }
 
-    static async deletePostById(postId) {
+    async deletePostById(postId) {
         try {
             const { rows } = await pool.query(
                 "DELETE FROM posts WHERE post_id = $1",
@@ -70,7 +70,7 @@ class PostDao {
         }
     }
 
-    static async getPostById(postId) {
+    async getPostById(postId) {
         try {
             const { rows } = await pool.query(
                 "SELECT * FROM posts WHERE post_id = $1",

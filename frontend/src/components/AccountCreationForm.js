@@ -30,7 +30,7 @@ const AccountCreationForm = () => {
 
     const createAccount = async (accountDetails) => {
         try {
-            const response = await axios.post("/api/accountCreation", {
+            const response = await axios.post("/api/user", {
                 accountDetails,
             });
             if (response.status === 200) {

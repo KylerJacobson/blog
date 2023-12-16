@@ -22,27 +22,22 @@ const PostCreationFrom = () => {
     } = useForm({ values });
 
     useEffect(() => {
+        if (!currentUser || currentUser.role !== 1) {
+            console.log("You are not authorized to view this page");
+            navigate("/error/403");
+        }
         const getPost = async () => {
             if (postId) {
                 try {
-                    const { data } = await axios.get(`/api/post/${postId}`);
+                    const { data } = await axios.get(`/api/posts/${postId}`);
                     setValues({
                         title: data.title,
                         content: data.content,
                         restricted: data.restricted,
                     });
-
-                    // Fetch Media
-                    let response;
-                    if (data.restricted) {
-                        response = await axios.get(
-                            `/api/getPrivateMedia/${postId}`
-                        );
-                    } else {
-                        response = await axios.get(
-                            `/api/getPublicMedia/${postId}`
-                        );
-                    }
+                    const response = await axios.get(`/api/media/${postId}`, {
+                        withCredentials: true,
+                    });
                     if (response.status === 200) {
                         setMedia(response.data);
                     }
@@ -57,14 +52,14 @@ const PostCreationFrom = () => {
     const createPost = async (postData) => {
         try {
             if (postId) {
-                const response = await axios.put(`/api/post/${postId}`, {
+                const response = await axios.put(`/api/posts/${postId}`, {
                     postData,
                 });
                 if (response.status === 200) {
                     navigate("/");
                 }
             } else {
-                const response = await axios.post("/api/postCreation", {
+                const response = await axios.post("/api/posts", {
                     postData,
                 });
                 if (response.status === 200) {
@@ -89,7 +84,7 @@ const PostCreationFrom = () => {
             }
             formData.append("postId", postId);
             try {
-                const response = await axios.post("/upload", formData, {
+                const response = await axios.post("/api/media", formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
@@ -102,11 +97,10 @@ const PostCreationFrom = () => {
         }
     };
 
-    const removeFile = async (mediaId, postId) => {
+    const removeFile = async (mediaId) => {
         try {
-            const response = await axios.post("/api/media/delete", {
-                mediaId: mediaId,
-                postId: postId,
+            const response = await axios.delete(`/api/media/${mediaId}`, {
+                withCredentials: true,
             });
             if (response.status === 200) {
                 setMedia((media) =>
@@ -187,9 +181,7 @@ const PostCreationFrom = () => {
                             <li>
                                 {file.blob_name}{" "}
                                 <button
-                                    onClick={() =>
-                                        removeFile(file.id, file.post_id)
-                                    }
+                                    onClick={() => removeFile(file.id)}
                                     style={{ color: "red" }}
                                 >
                                     X

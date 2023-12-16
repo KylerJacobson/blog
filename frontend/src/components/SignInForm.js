@@ -7,7 +7,7 @@ import "./form.css";
 
 const SignInForm = () => {
     const [validLogin, setValidLogin] = useState();
-    const { currentUser, setCurrentUser } = useContext(AuthContext);
+    const { setCurrentUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const {
@@ -18,21 +18,17 @@ const SignInForm = () => {
 
     const signIn = async (formData) => {
         try {
-            const { data: token } = await axios.post("/api/signIn", {
+            const response = await axios.post("/api/session", {
                 formData,
             });
+            if (response.status !== 200) {
+                throw new Error("Sign in failed");
+            }
             setValidLogin(true);
-            const { data: userData } = await axios.get("/api/getUser/", {
+            const { data: user } = await axios.get(`/api/user`, {
                 withCredentials: true,
             });
-            const { firstName, lastName, email, role } = userData;
-            setCurrentUser({
-                firstName,
-                lastName,
-                email,
-                role,
-                token,
-            });
+            setCurrentUser(user);
             navigate("/");
         } catch (error) {
             console.error("There was an error submitting the form", error);

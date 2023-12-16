@@ -63,12 +63,12 @@ function App() {
 export default App;
 
 function RedirectToLogin(props) {
-    const { setCurrentUser } = useContext(AuthContext);
+    const { currentUser, setCurrentUser } = useContext(AuthContext);
     const navigate = useNavigate();
     useEffect(() => {
         const verifySession = async () => {
             try {
-                const { data: user } = await axios.get("/api/getUser/", {
+                const { data: user } = await axios.get(`/api/user`, {
                     withCredentials: true,
                 });
                 setCurrentUser(user);

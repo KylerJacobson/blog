@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../contexts/AuthContext";
-import { ADMIN } from "../constants/roleConstants";
+import { ROLE } from "../constants/roleConstants";
 import formatDate from "../helpers/helpers";
 import "./PostCard.css";
 
@@ -11,10 +11,8 @@ const PostCard = (props) => {
     const navigate = useNavigate();
 
     const deletePost = async () => {
-        const postId = props.postId;
-        const response = await axios.post("/api/deletePostById", {
-            postId,
-        });
+        const id = props.postId;
+        const response = await axios.delete(`/api/posts/${id}`);
         if (response.status === 200) {
             props.onDelete();
         } else {
@@ -60,7 +58,7 @@ const PostCard = (props) => {
             )}
             <p>Posted at: {formatDate(props.postDate)}</p>
             <div>
-                {currentUser?.role === ADMIN && (
+                {currentUser?.role === ROLE.ADMIN && (
                     <button
                         className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
                         onClick={editPost}
@@ -68,7 +66,7 @@ const PostCard = (props) => {
                         Edit Post
                     </button>
                 )}{" "}
-                {currentUser?.role === ADMIN && (
+                {currentUser?.role === ROLE.ADMIN && (
                     <button
                         className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
                         onClick={deletePost}

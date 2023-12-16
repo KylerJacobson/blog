@@ -1,5 +1,4 @@
 const { Pool } = require("pg");
-const dotenv = require("dotenv");
 require("dotenv").config();
 
 const pool = new Pool({
@@ -20,7 +19,7 @@ class User {
 }
 
 class UserDao {
-    static async getUserByEmail(email) {
+    async getUserByEmail(email) {
         const { rows } = await pool.query(
             "SELECT * FROM users WHERE email = $1",
             [email]
@@ -35,7 +34,7 @@ class UserDao {
         );
     }
 
-    static async getUserById(id) {
+    async getUserById(id) {
         const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [
             id,
         ]);
@@ -49,7 +48,7 @@ class UserDao {
         );
     }
 
-    static async getAllUsers() {
+    async getAllUsers() {
         const { rows } = await pool.query(
             "SELECT id, first_name, last_name, email, role, created_at FROM users ORDER BY created_at ASC"
         );
@@ -57,7 +56,7 @@ class UserDao {
         return rows;
     }
 
-    static async getUsersByRole(role) {
+    async getUsersByRole(role) {
         const { rows } = await pool.query(
             "SELECT id, first_name, last_name, email, role, created_at FROM users WHERE role = $1",
             [role]
@@ -66,24 +65,19 @@ class UserDao {
         return rows;
     }
 
-    static async updateUserRole(id, role) {
+    async updateUser(id, firstName, lastName, email, role) {
         try {
             const { rows } = await pool.query(
-                "UPDATE users SET role = $1 WHERE id = $2 RETURNING id",
-                [role, id]
+                "UPDATE users SET first_name = $1, last_name = $2, email = $3, role = $4 WHERE id = $5",
+                [firstName, lastName, email, role, id]
             );
             return rows;
         } catch (error) {
             console.error(`Error inserting into posts: ${error}`);
         }
     }
-    static async createUser(
-        firstName,
-        lastName,
-        email,
-        password,
-        accessRequest
-    ) {
+
+    async createUser(firstName, lastName, email, password, accessRequest) {
         let access = 0;
         if (accessRequest) {
             access = -1;
@@ -95,7 +89,7 @@ class UserDao {
         return rows[0].id;
     }
 
-    static async deleteUserById(userId) {
+    async deleteUserById(userId) {
         try {
             const { rows } = await pool.query(
                 "DELETE FROM users WHERE id = $1",
@@ -110,7 +104,7 @@ class UserDao {
         }
     }
 
-    static async loginUser(email, password) {
+    async loginUser(email, password) {
         const { rows } = await pool.query(
             "SELECT (password = crypt($1, password)) AS isMatch FROM users WHERE email = $2",
             [password, email]
