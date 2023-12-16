@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../contexts/AuthContext";
 import { ROLE } from "../constants/roleConstants";
-import formatDate from "../helpers/helpers";
+import convertUtcToLocal from "../helpers/helpers";
 import "./PostCard.css";
 
 const PostCard = (props) => {
@@ -56,7 +56,7 @@ const PostCard = (props) => {
                     Private
                 </p>
             )}
-            <p>Posted at: {formatDate(props.postDate)}</p>
+            <p>Posted at: {convertUtcToLocal(props.postDate)}</p>
             <div>
                 {currentUser?.role === ROLE.ADMIN && (
                     <button
