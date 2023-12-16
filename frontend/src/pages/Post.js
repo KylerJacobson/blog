@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import formatDate from "../helpers/helpers";
+import convertUtcToLocal from "../helpers/helpers";
 import "./Post.css";
 import { useNavigate } from "react-router-dom";
 import { ROLE } from "../constants/roleConstants";
@@ -66,7 +66,7 @@ function Post() {
             <div>
                 <h1 className="mt-4">{post.title}</h1>
                 <p>
-                    {post.created_at && formatDate(post.created_at)}{" "}
+                    {post.created_at && convertUtcToLocal(post.created_at)}{" "}
                     {post ? "by Kyler Jacobson" : ""}
                 </p>
                 <div>

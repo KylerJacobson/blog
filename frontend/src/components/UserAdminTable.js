@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import formatDate from "../helpers/helpers";
+import convertUtcToLocal from "../helpers/helpers";
 
 import { ROLE } from "../constants/roleConstants";
 
@@ -82,7 +82,7 @@ const UserAdminTable = () => {
                         </td>
                         <td>{user.email}</td>
                         <td>{formatRole(user.role)}</td>
-                        <td>{formatDate(user.created_at)}</td>
+                        <td>{convertUtcToLocal(user.created_at)}</td>
                         <td>
                             <button
                                 className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
