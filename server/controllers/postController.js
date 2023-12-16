@@ -8,7 +8,7 @@ class PostController {
     async create(req, res) {
         const { title, content, restricted } = req.body.postData;
         if (req.payload.role != ROLE.ADMIN) {
-            return res.status(401).json({
+            return res.status(403).json({
                 message: "You are not authorized to create a post",
             });
         }
@@ -27,6 +27,7 @@ class PostController {
             res.status(500).json({ message: "error: ", error });
         }
     }
+
     async list(req, res, next) {
         if (
             (req.isAuthenticated && req?.payload?.role === ROLE.ADMIN) ||

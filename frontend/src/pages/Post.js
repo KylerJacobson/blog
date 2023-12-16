@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import formatDate from "../helpers/helpers";
 import "./Post.css";
-import ErrorComponent from "../components/ErrorComponent";
 import { useNavigate } from "react-router-dom";
 import { ROLE } from "../constants/roleConstants";
 
@@ -48,6 +47,7 @@ function Post() {
     const deletePost = async () => {
         const response = await axios.delete(`/api/posts/${postId}`);
         if (response.status === 200) {
+            navigate("/");
         } else {
             console.error("error deleting post, please try again");
         }

@@ -22,6 +22,10 @@ const PostCreationFrom = () => {
     } = useForm({ values });
 
     useEffect(() => {
+        if (!currentUser || currentUser.role !== 1) {
+            console.log("You are not authorized to view this page");
+            navigate("/error/403");
+        }
         const getPost = async () => {
             if (postId) {
                 try {
@@ -95,7 +99,9 @@ const PostCreationFrom = () => {
 
     const removeFile = async (mediaId) => {
         try {
-            const response = await axios.delete(`/api/media/${mediaId}`);
+            const response = await axios.delete(`/api/media/${mediaId}`, {
+                withCredentials: true,
+            });
             if (response.status === 200) {
                 setMedia((media) =>
                     media.filter((content) => content.id !== mediaId)

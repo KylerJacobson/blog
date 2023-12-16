@@ -104,6 +104,11 @@ class MediaController {
 
     async destroy(req, res) {
         const { mediaId } = req.params;
+        if (req.payload.role != ROLE.ADMIN) {
+            return res.status(403).json({
+                message: "You are not authorized to delete media",
+            });
+        }
         try {
             const media = await this.mediaDao.deleteMediaByMediaId(mediaId);
             return res.status(200).json({

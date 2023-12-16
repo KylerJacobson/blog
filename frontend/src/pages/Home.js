@@ -3,10 +3,11 @@ import "./Home.css";
 import axios from "axios";
 import PostCard from "../components/PostCard";
 import { AuthContext } from "../contexts/AuthContext";
+
 function Home() {
     const [posts, setPosts] = useState("");
     const [refreshPosts, setRefreshPosts] = useState(false);
-    const currentUser = useContext(AuthContext);
+    const { currentUser } = useContext(AuthContext);
 
     useEffect(() => {
         const getPosts = async () => {
