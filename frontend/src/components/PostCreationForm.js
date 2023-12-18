@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { AuthContext } from "../contexts/AuthContext";
@@ -8,13 +8,14 @@ const PostCreationFrom = () => {
     const { postId } = useParams();
     const { currentUser } = useContext(AuthContext);
     const navigate = useNavigate();
+    const [error, setError] = useState();
     const [values, setValues] = useState({
         title: "",
         content: "",
         restricted: "",
     });
     const [media, setMedia] = useState([]);
-
+    const fileInputRef = useRef(null);
     const {
         register,
         handleSubmit,
@@ -62,10 +63,10 @@ const PostCreationFrom = () => {
                 const response = await axios.post("/api/posts", {
                     postData,
                 });
+                handleUpload(response.data, postData.restricted);
                 if (response.status === 200) {
                     navigate("/");
                 }
-                handleUpload(response.data, postData.restricted);
             }
         } catch (error) {
             console.error("There was an error submitting the form", error);
@@ -73,7 +74,19 @@ const PostCreationFrom = () => {
     };
     const [files, setFiles] = useState([]);
     const handleFileChange = (event) => {
-        setFiles([...files, event.target.files[0]]);
+        if (
+            event.target.files[0] &&
+            event.target.files[0].type.startsWith("video/") &&
+            event.target.files[0].type !== "video/mp4"
+        ) {
+            setError("Please use MP4 video type");
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        } else {
+            setError("");
+            setFiles([...files, event.target.files[0]]);
+        }
     };
     const handleUpload = async (postId, restricted) => {
         if (files) {
@@ -174,6 +187,7 @@ const PostCreationFrom = () => {
                 </button>
             </form>
             <div>
+                {error && <p style={{ color: "Red" }}>{error}</p>}
                 <p>Uploaded Files</p>
                 <ul>
                     {media.map((file) => {
@@ -192,13 +206,17 @@ const PostCreationFrom = () => {
                 </ul>
             </div>
             <div>
-                <input type="file" onChange={handleFileChange} />
+                <input
+                    type="file"
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                />
             </div>
 
             <div>
                 <ul>
                     {files.map((file) => {
-                        return <li>{file.name}</li>;
+                        return <li>{file?.name}</li>;
                     })}
                 </ul>
             </div>

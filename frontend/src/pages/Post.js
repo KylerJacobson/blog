@@ -93,7 +93,7 @@ function Post() {
                 {media.length > 0
                     ? media.map((item, index) => (
                           <div key={index}>
-                              {item.content_type === "image/jpeg" && (
+                              {item.content_type.startsWith("image/") && (
                                   <img src={item.url} alt="images for post" />
                               )}
                               {item.content_type === "video/mp4" && (
