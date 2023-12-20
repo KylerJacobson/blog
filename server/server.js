@@ -51,7 +51,9 @@ app.use(
 
 // --------------------------------------------- User Routes --------------------------------------------
 
-app.post(`${LOCAL_API}${USER_PATH}`, userController.create);
+app.post(`${LOCAL_API}${USER_PATH}`, (req, res) =>
+    userController.create(req, res)
+);
 
 app.get(`${LOCAL_API}${USER_PATH}/list`, verifyToken, (req, res) =>
     userController.list(req, res)

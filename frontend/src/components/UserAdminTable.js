@@ -61,6 +61,7 @@ const UserAdminTable = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Notifications</th>
                     <th>Account Creation Date</th>
                     <th></th>
                     <th></th>
@@ -82,6 +83,7 @@ const UserAdminTable = () => {
                         </td>
                         <td>{user.email}</td>
                         <td>{formatRole(user.role)}</td>
+                        <td>{user.email_notification && "Enabled"}</td>
                         <td>{convertUtcToLocal(user.created_at)}</td>
                         <td>
                             <button

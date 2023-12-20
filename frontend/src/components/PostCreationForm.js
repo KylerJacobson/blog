@@ -24,7 +24,6 @@ const PostCreationFrom = () => {
 
     useEffect(() => {
         if (!currentUser || currentUser.role !== 1) {
-            console.log("You are not authorized to view this page");
             navigate("/error/403");
         }
         const getPost = async () => {

@@ -11,6 +11,7 @@ import SignIn from "./pages/SignIn";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import ErrorComponent from "./components/ErrorComponent";
+import ManageAccount from "./pages/ManageAccount";
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -27,6 +28,9 @@ function App() {
                         </Route>
                         <Route path="/createAccount" element={<SharedLayout />}>
                             <Route index element={<CreateAccount />} />
+                        </Route>
+                        <Route path="/manageAccount" element={<SharedLayout />}>
+                            <Route index element={<ManageAccount />} />
                         </Route>
                         <Route path="/signIn" element={<SharedLayout />}>
                             <Route index element={<SignIn />} />
