@@ -172,7 +172,7 @@ const ManageAccountForm = () => {
                             htmlFor="emailNotification"
                             className="text-lg font-medium text-gray-600"
                         >
-                            Request email notifications for new posts
+                            Email notifications for new posts
                         </label>
                     </div>
                     <div>
