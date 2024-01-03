@@ -42,6 +42,11 @@ function NavigationBar() {
                         <Nav.Link as={Link} to={"/about"}>
                             About
                         </Nav.Link>
+                        {currentUser && (
+                            <Nav.Link as={Link} to={"/manageAccount"}>
+                                My Account
+                            </Nav.Link>
+                        )}
                         {currentUser?.role === ROLE.ADMIN && (
                             <Nav.Link as={Link} to={"/createPost"}>
                                 Create Posts

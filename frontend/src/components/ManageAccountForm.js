@@ -1,43 +1,72 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import "./form.css";
 
-const AccountCreationForm = () => {
-    const [passwordMatch, setPasswordMatch] = useState(true);
-    const [accountExists, setAccountExists] = useState(false);
+const ManageAccountForm = () => {
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const { currentUser, setCurrentUser } = useContext(AuthContext);
 
     const {
         register,
         handleSubmit,
-        watch,
+        setValue,
         formState: { errors },
     } = useForm();
 
-    const userPassword = watch("password");
-    const userConfirmPassword = watch("confirmPassword");
-
     useEffect(() => {
-        if (userPassword !== userConfirmPassword) {
-            setPasswordMatch(false);
-        } else {
-            setPasswordMatch(true);
-        }
-    }, [userPassword, userConfirmPassword]);
+        const getUser = async () => {
+            if (currentUser?.id) {
+                try {
+                    let restricted;
+                    if (currentUser.role !== 0) {
+                        restricted = true;
+                    } else {
+                        restricted = false;
+                    }
+                    setValue("firstName", currentUser.firstName);
+                    setValue("lastName", currentUser.lastName);
+                    setValue("email", currentUser.email);
+                    setValue("restricted", restricted);
+                    setValue(
+                        "emailNotification",
+                        currentUser.emailNotification
+                    );
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        };
+        getUser();
+    }, [currentUser]);
 
     const createAccount = async (accountDetails) => {
         try {
-            const response = await axios.post("/api/user", {
-                accountDetails,
+            let role;
+            if (accountDetails.restricted === false) {
+                role = 0;
+            } else if (accountDetails.restricted && currentUser.role === 0) {
+                role = -1;
+            } else {
+                role = currentUser.role;
+            }
+            const updatedUser = await axios.put("/api/user", {
+                user: {
+                    id: currentUser.id,
+                    first_name: accountDetails.firstName,
+                    last_name: accountDetails.lastName,
+                    email: accountDetails.email,
+                    role: role,
+                    email_notification: accountDetails.emailNotification,
+                },
             });
-            if (response.status === 200) {
+            if (updatedUser.status === 200) {
+                setShowSuccessMessage(true);
+                setTimeout(() => setShowSuccessMessage(false), 1500);
                 setError(null);
-                navigate("/signIn");
-            } else if (response.status === 409) {
-                setAccountExists(true);
+                setCurrentUser(updatedUser.data);
             }
         } catch (error) {
             console.error("There was an error submitting the form", error);
@@ -115,54 +144,6 @@ const AccountCreationForm = () => {
                         {errors.email?.type === "required" && (
                             <p className="errorMsg">Email is required.</p>
                         )}
-                        {accountExists && (
-                            <p className="errorMsg">
-                                An account with this email already exists!
-                            </p>
-                        )}
-                    </div>
-                    <div>
-                        <label htmlFor="password" className="mt-4">
-                            Password:
-                        </label>
-                        <input
-                            className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
-                            type="password"
-                            name="password"
-                            id="password"
-                            {...register("password", {
-                                required: true,
-                                minLength: 6,
-                            })}
-                        />
-                        {errors.password?.type === "required" && (
-                            <p className="errorMsg">Password is required</p>
-                        )}
-                        {errors.password?.type === "minLength" && (
-                            <p className="errorMsg">
-                                Password must be at least 6 characters
-                            </p>
-                        )}
-                    </div>
-                    <div>
-                        <label htmlFor="confirmPassword" className="mt-4">
-                            Confirm Password:
-                        </label>
-                        <input
-                            className="w-full p-2 m-auto bg-white rounded-md ring-2 ring-slate-600"
-                            type="password"
-                            name="confirmPassword"
-                            id="confirmPassword"
-                            {...register("confirmPassword")}
-                        />
-                        {errors.password?.type === "required" && (
-                            <p className="errorMsg">Password is required</p>
-                        )}
-                        {passwordMatch === false && (
-                            <p className="errorMsg">
-                                Passwords don't match {passwordMatch}
-                            </p>
-                        )}
                     </div>
                     <div className="mt-4 ">
                         <input
@@ -188,7 +169,7 @@ const AccountCreationForm = () => {
                             {...register("emailNotification")}
                         />
                         <label
-                            htmlFor="emailNotifications"
+                            htmlFor="emailNotification"
                             className="text-lg font-medium text-gray-600"
                         >
                             Email notifications for new posts
@@ -200,21 +181,20 @@ const AccountCreationForm = () => {
                                 {error}
                             </p>
                         )}
+                        <div className="mt-5 mb-3" style={{ height: "20px" }}>
+                            {showSuccessMessage && (
+                                <div style={{ color: "green" }}>
+                                    Account successfully updated
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             type="submit"
-                            className="w-full p-2 m-auto bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4 mt-5 rounded"
+                            className="w-full p-2 m-auto bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4  rounded"
                         >
-                            Create Account
+                            Update Account
                         </button>
-                        <p className="mt-6 text-xs font-light text-center text-gray-700">
-                            Already have an account?{" "}
-                            <Link
-                                to="/signin"
-                                className="font-medium text-indigo-600 hover:underline"
-                            >
-                                Sign in
-                            </Link>
-                        </p>
                     </div>
                 </form>
             </div>
@@ -222,4 +202,4 @@ const AccountCreationForm = () => {
     );
 };
 
-export default AccountCreationForm;
+export default ManageAccountForm;

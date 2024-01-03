@@ -6,8 +6,14 @@ class UserController {
     }
 
     async create(req, res) {
-        const { firstName, lastName, email, password, restricted } =
-            req.body.accountDetails;
+        const {
+            firstName,
+            lastName,
+            email,
+            password,
+            restricted,
+            emailNotification,
+        } = req.body.accountDetails;
         try {
             let user = await this.userDao.getUserByEmail(email);
             if (user) {
@@ -18,7 +24,8 @@ class UserController {
                     lastName,
                     email,
                     password,
-                    restricted
+                    restricted,
+                    emailNotification
                 );
                 if (userId) {
                     res.status(200).json({
@@ -50,7 +57,7 @@ class UserController {
     }
 
     async list(req, res) {
-        if (req.payload.role != ROLE.ADMIN) {
+        if (req?.payload?.role != ROLE.ADMIN) {
             return res.status(401).json({
                 message: "You are not authorized to retrieve all users",
             });
@@ -78,17 +85,16 @@ class UserController {
         }
 
         try {
-            let response = await this.userDao.updateUser(
+            let updatedUser = await this.userDao.updateUser(
                 user.id,
                 user.first_name,
                 user.last_name,
                 user.email,
-                user.role
+                user.role,
+                user.email_notification
             );
-            if (response) {
-                return res
-                    .status(200)
-                    .json({ message: "Successfully updated role" });
+            if (updatedUser) {
+                return res.status(200).json(updatedUser);
             } else {
                 return res.status(500).json({ message: "Error updating role" });
             }
