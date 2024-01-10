@@ -59,6 +59,14 @@ class UserDao {
         return rows;
     }
 
+    async getUsersWithNotifications() {
+        const { rows } = await pool.query(
+            "SELECT id, first_name, last_name, email, role, email_notification, created_at FROM users WHERE email_notification = true"
+        );
+        if (rows.length === 0) return [];
+        return rows;
+    }
+
     async getUsersByRole(role) {
         const { rows } = await pool.query(
             "SELECT id, first_name, last_name, email, role, created_at FROM users WHERE role = $1",

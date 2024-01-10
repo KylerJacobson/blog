@@ -83,7 +83,6 @@ class UserController {
         ) {
             user.role = role;
         }
-
         try {
             let updatedUser = await this.userDao.updateUser(
                 user.id,

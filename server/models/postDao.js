@@ -15,7 +15,7 @@ class PostDao {
                 "INSERT INTO posts (title, content, restricted, user_id) VALUES ($1, $2, $3, $4) RETURNING *",
                 [title, content, restricted, userId]
             );
-            return rows;
+            return rows[0];
         } catch (error) {
             console.error(`Error inserting into posts: ${error}`);
         }

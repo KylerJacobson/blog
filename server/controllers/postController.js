@@ -1,8 +1,10 @@
 const { ROLE } = require("../constants/roleConstants");
 
 class PostController {
-    constructor(postDao) {
+    constructor(postDao, notificationController, userDao) {
         this.postDao = postDao;
+        this.notificationController = notificationController;
+        this.userDao = userDao;
     }
 
     async create(req, res) {
@@ -21,7 +23,11 @@ class PostController {
                 req.payload.sub
             );
             if (post) {
-                res.status(200).json(post[0].post_id);
+                const users = await this.userDao.getUsersWithNotifications();
+                users.map((user) => {
+                    this.notificationController.notify(user, post);
+                });
+                res.status(200).json(post.post_id);
             }
         } catch (error) {
             res.status(500).json({ message: "error: ", error });

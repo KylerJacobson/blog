@@ -13,6 +13,7 @@ const SessionController = require("./controllers/sessionController");
 const PostController = require("./controllers/postController");
 const MediaController = require("./controllers/mediaController");
 const verifyToken = require("./helpers/authMiddleware");
+const NotificationService = require("./services/notification.service");
 
 const SESSION_SECRET = process.env.SessionSecret;
 const COOKIE_SECURITY = process.env.CookieSecurity === "true";
@@ -21,9 +22,14 @@ const port = process.env.PORT || 8080;
 const userDao = new UserDao();
 const postDao = new PostDao();
 const mediaDao = new MediaDao();
+const notificationService = new NotificationService();
 const userController = new UserController(userDao);
 const sessionController = new SessionController(userDao);
-const postController = new PostController(postDao);
+const postController = new PostController(
+    postDao,
+    notificationService,
+    userDao
+);
 const mediaController = new MediaController(mediaDao);
 
 const LOCAL_API = "/api";

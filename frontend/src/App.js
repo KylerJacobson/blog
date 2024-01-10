@@ -12,6 +12,7 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import ErrorComponent from "./components/ErrorComponent";
 import ManageAccount from "./pages/ManageAccount";
+import About from "./pages/About";
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -24,7 +25,7 @@ function App() {
                             <Route index element={<Home />} />
                         </Route>
                         <Route path="/about" element={<SharedLayout />}>
-                            <Route index element={<h1>About</h1>} />
+                            <Route index element={<About />} />
                         </Route>
                         <Route path="/createAccount" element={<SharedLayout />}>
                             <Route index element={<CreateAccount />} />
