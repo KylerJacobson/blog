@@ -87,16 +87,13 @@ function NavigationBar() {
                     </a>
                     <Nav className="justify-content-end">
                         {!currentUser && (
-                            <Button
-                                variant="outline-primary"
-                                onClick={handleClick}
-                            >
+                            <Button className="login-btn" onClick={handleClick}>
                                 Log In
                             </Button>
                         )}
                         {currentUser && (
                             <Button
-                                variant="outline-danger"
+                                className="logout-btn"
                                 onClick={handleClick}
                             >
                                 Log out

@@ -86,32 +86,38 @@ const UserAdminTable = () => {
                         <td>{user.email_notification && "Enabled"}</td>
                         <td>{convertUtcToLocal(user.created_at)}</td>
                         <td>
-                            <button
-                                className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
-                                onClick={() =>
-                                    handleRequest(user, ROLE.PRIVILEGED)
-                                }
-                            >
-                                Approve
-                            </button>
+                            {user.role !== ROLE.ADMIN && (
+                                <button
+                                    className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
+                                    onClick={() =>
+                                        handleRequest(user, ROLE.PRIVILEGED)
+                                    }
+                                >
+                                    Approve
+                                </button>
+                            )}
                         </td>
                         <td>
-                            <button
-                                className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
-                                onClick={() =>
-                                    handleRequest(user, ROLE.NON_PRIVILEGED)
-                                }
-                            >
-                                Deny
-                            </button>
+                            {user.role !== ROLE.ADMIN && (
+                                <button
+                                    className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
+                                    onClick={() =>
+                                        handleRequest(user, ROLE.NON_PRIVILEGED)
+                                    }
+                                >
+                                    Deny
+                                </button>
+                            )}
                         </td>
                         <td>
-                            <button
-                                className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
-                                onClick={() => deleteUser(user.id)}
-                            >
-                                Delete User
-                            </button>
+                            {user.role !== ROLE.ADMIN && (
+                                <button
+                                    className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
+                                    onClick={() => deleteUser(user.id)}
+                                >
+                                    Delete User
+                                </button>
+                            )}
                         </td>
                     </tr>
                 ))}
