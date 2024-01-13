@@ -1,4 +1,5 @@
 import React from "react";
+import "./About.css";
 
 function About() {
     return (
@@ -19,8 +20,13 @@ function About() {
                 wanted a venue to discuss technology, art, and ideas. Lastly, I
                 wanted to sharpen my skills and tackle deploying a full-stack
                 web application. To that end, this project is entirely {}
-                <a href="https://github.com/KylerJacobson/blog">open-source</a>,
-                and any feedback and/or feature requests are welcome and
+                <a
+                    className="link"
+                    href="https://github.com/KylerJacobson/blog"
+                >
+                    open-source
+                </a>
+                , and any feedback and/or feature requests are welcome and
                 appreciated. Public writing is not what I would consider one of
                 my strong suits, and being new to the field of software
                 engineering, I'm sure I will get things wrong. So, here's to the
