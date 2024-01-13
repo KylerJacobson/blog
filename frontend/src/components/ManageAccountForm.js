@@ -77,7 +77,7 @@ const ManageAccountForm = () => {
         }
     };
     return (
-        <div className="min-h-screen mt-10">
+        <div className="h-[80vh] mt-10">
             <div className="w-full p-6 m-auto bg-white rounded-md ring-2 shadow-md shadow-slate-600/80 ring-slate-600 lg:max-w-xl">
                 <form
                     onSubmit={handleSubmit((formData) => {

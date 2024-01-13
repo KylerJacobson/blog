@@ -6,7 +6,7 @@ function Footer() {
     return (
         <div className="footer">
             <div className="footer-box">
-                <p>© {date}</p>
+                <p>v.1.0.0</p>
             </div>
         </div>
     );
