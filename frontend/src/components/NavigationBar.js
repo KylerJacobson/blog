@@ -5,6 +5,9 @@ import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { AuthContext } from "../contexts/AuthContext";
 import axios from "axios";
 import { ROLE } from "../constants/roleConstants";
+import linkedInIcon from "../assets/svg/linkedin-svgrepo-com.svg";
+import githubIcon from "../assets/svg/github-142-svgrepo-com.svg";
+import emailIcon from "../assets/svg/email-svgrepo-com.svg";
 
 function NavigationBar() {
     const { currentUser, setCurrentUser } = useContext(AuthContext);
@@ -58,7 +61,30 @@ function NavigationBar() {
                             </Nav.Link>
                         )}
                     </Nav>
-
+                    <a href="https://www.linkedin.com/in/kylerjacobson/">
+                        <img
+                            src={linkedInIcon}
+                            width="35"
+                            height="35"
+                            alt="LinkedIn icon"
+                        />
+                    </a>
+                    <a href="https://github.com/KylerJacobson">
+                        <img
+                            src={githubIcon}
+                            width="35"
+                            height="35"
+                            alt="Github icon"
+                        />
+                    </a>
+                    <a href="mailto:contact@kylerjacobson.dev">
+                        <img
+                            src={emailIcon}
+                            width="40"
+                            height="40"
+                            alt="email icon"
+                        />
+                    </a>
                     <Nav className="justify-content-end">
                         {!currentUser && (
                             <Button

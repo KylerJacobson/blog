@@ -61,6 +61,7 @@ const ManageAccountForm = () => {
                     role: role,
                     email_notification: accountDetails.emailNotification,
                 },
+                role: currentUser.role,
             });
             if (updatedUser.status === 200) {
                 setShowSuccessMessage(true);
