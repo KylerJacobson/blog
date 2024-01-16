@@ -202,7 +202,7 @@ const AccountCreationForm = () => {
                         )}
                         <button
                             type="submit"
-                            className="w-full p-2 m-auto bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4 mt-5 rounded"
+                            className="w-full p-2 m-auto text-white bg-aurora-green py-2 px-4 mt-5 rounded"
                         >
                             Create Account
                         </button>
@@ -210,7 +210,7 @@ const AccountCreationForm = () => {
                             Already have an account?{" "}
                             <Link
                                 to="/signin"
-                                className="font-medium text-indigo-600 hover:underline"
+                                className="font-medium hover:underline"
                             >
                                 Sign in
                             </Link>
