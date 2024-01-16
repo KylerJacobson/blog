@@ -2,8 +2,9 @@ import React, { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import Markdown from "react-markdown";
 import convertUtcToLocal from "../helpers/helpers";
-import "./Post.css";
+import "../styles/post.css";
 import { useNavigate } from "react-router-dom";
 import { ROLE } from "../constants/roleConstants";
 
@@ -62,17 +63,17 @@ function Post() {
         setMedia(response.data);
     };
     return (
-        <div className=" flex flex-col p-2 my-8 mx-auto bg-white shadow-lg xl:max-w-6xl px-5">
+        <div className="relative flex flex-col p-2 my-8 mx-auto bg-white shadow-lg xl:max-w-6xl px-4">
             <div>
-                <h1 className="mt-4">{post.title}</h1>
+                <h1 className="post-title mt-4">{post.title}</h1>
                 <p>
                     {post.created_at && convertUtcToLocal(post.created_at)}{" "}
                     {post ? "by Kyler Jacobson" : ""}
                 </p>
-                <div>
+                <div className="absolute top-0 right-0 mt-4 mr-4">
                     {currentUser?.role === ROLE.ADMIN && (
                         <button
-                            className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
+                            className="p-1 min-w-0 bg-aurora-green text-white text-xl rounded-md"
                             onClick={editPost}
                         >
                             Edit Post
@@ -80,7 +81,7 @@ function Post() {
                     )}{" "}
                     {currentUser?.role === ROLE.ADMIN && (
                         <button
-                            className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
+                            className="p-1 min-w-0 bg-aurora-red  text-white text-xl rounded-md"
                             onClick={deletePost}
                         >
                             Delete Post
@@ -88,8 +89,8 @@ function Post() {
                     )}
                 </div>
             </div>
-            <div className="post-content mt-8">
-                <p>{post.content}</p>
+            <div className="post-content pb-4">
+                <Markdown>{post.content}</Markdown>
                 {media.length > 0
                     ? media.map((item, index) => (
                           <div key={index}>

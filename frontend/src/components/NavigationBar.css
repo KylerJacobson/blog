@@ -2,23 +2,23 @@ img {
     margin: 0px 15px 0px 0px;
 }
 .btn.login-btn {
-    color: #6366f1;
-    background-color: white;
-    border-color: #6366f1;
+    color: white;
+    background-color: #a3be8c;
+    border-color: #a3be8c;
 }
 .btn.login-btn:hover {
-    color: white;
-    background-color: #6366f1;
-    border-color: #6366f1;
+    color: #a3be8c;
+    background-color: white;
+    border-color: #a3be8c;
 }
 
 .btn.logout-btn {
     color: white;
-    background-color: #6366f1;
-    border-color: #6366f1;
+    background-color: #bf616a;
+    border-color: #bf616a;
 }
 .btn.logout-btn:hover {
-    color: #6366f1;
+    color: #bf616a;
     background-color: white;
-    border-color: #6366f1;
+    border-color: #bf616a;
 }

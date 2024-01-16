@@ -2,67 +2,61 @@
     color: black;
 }
 
-.post-card-card-content {
-    white-space: pre-line;
-    height: 100%;
-    overflow: hidden;
-    position: relative;
+@media (max-width: 500px) {
+    .post-content {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
 }
 
-.post-card-content::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100px; /* Height of the fade-out effect */
-    background: linear-gradient(to top, white, transparent);
+@media (min-width: 501px) {
+    .post-content {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
 }
 
-.post-title {
-    color: black;
-}
-
-.post-card-content {
+/* General Styles */
+.post-content {
     font-family: "Roboto", sans-serif;
     line-height: 1.6;
     color: black;
     background-color: white;
 }
 
-.post-card-content h1 {
+.post-content h1 {
     color: #b48ead;
     font-size: 32px;
-    margin-top: 8px;
-    margin-bottom: 6px;
+    margin-top: 12px;
+    margin-bottom: 8px;
     font-weight: 700;
 }
-.post-card-content h2 {
+.post-content h2 {
     color: #a3be8c;
     font-size: 28px;
-    margin-top: 8px;
-    margin-bottom: 6px;
+    margin-top: 16px;
+    margin-bottom: 12px;
     font-weight: 500;
 }
-.post-card-content h3 {
+.post-content h3 {
     color: #ebcb8b;
     font-size: 24px;
     margin-top: 15px;
     margin-bottom: 12px;
 }
-.post-card-content h4 {
+.post-content h4 {
     color: #d08770;
     font-size: 20px;
     margin-top: 16px;
     margin-bottom: 4px;
 }
-.post-card-content h5 {
+.post-content h5 {
     color: #bf616a;
     font-size: 16px;
     margin-top: 16px;
     margin-bottom: 4px;
 }
-.post-card-content h6 {
+.post-content h6 {
     color: #b48ead;
     font-size: 16px;
     margin-top: 16px;
@@ -70,47 +64,48 @@
     font-weight: 300;
 }
 
-.post-card-content p {
+.post-content p {
     margin-bottom: 0px;
 }
 
-.post-card-content em {
+.post-content em {
     color: #81a1c1;
 }
 
-.post-card-content strong {
+.post-content strong {
     color: #5e81ac;
 }
 
-.post-card-content a {
+/* Links */
+.post-content a {
     color: #5e81ac;
     text-decoration: none;
 }
 
-.post-card-content a:hover {
+.post-content a:hover {
     text-decoration: underline;
 }
 
-.post-card-content ul {
+.post-content ul {
     margin-left: 12px;
     margin-bottom: 0px;
     margin-top: 0px;
     padding: 0px;
 }
-.post-card-content ol {
+.post-content ol {
     margin-left: 12px;
     margin-bottom: 0px;
     margin-top: 0px;
     padding: 0px;
 }
 
-.post-card-content ul li {
+.post-content ul li {
     padding: 0px;
     margin-top: 0px;
     margin-bottom: 0px;
 }
 
-.post-card-content blockquote {
+.post-content blockquote {
     margin: 16px 0;
     padding-left: 20px;
     border-left: 4px solid #cccccc;
@@ -118,7 +113,7 @@
     font-style: italic;
 }
 
-.post-card-content code {
+.post-content code {
     font-family: "Courier New", Courier, monospace;
     display: block;
     background-color: #333333;
@@ -128,7 +123,7 @@
     border-radius: 4px;
 }
 
-.post-card-content img {
+.post-content img {
     margin-top: 15px;
     max-width: 100%;
     height: auto;

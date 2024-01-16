@@ -88,7 +88,7 @@ const UserAdminTable = () => {
                         <td>
                             {user.role !== ROLE.ADMIN && (
                                 <button
-                                    className="p-1 min-w-0 bg-indigo-500 hover:bg-indigo-700 text-white text-xl rounded-md"
+                                    className="p-1 min-w-0 bg-aurora-green text-white text-xl rounded-md"
                                     onClick={() =>
                                         handleRequest(user, ROLE.PRIVILEGED)
                                     }
@@ -100,7 +100,7 @@ const UserAdminTable = () => {
                         <td>
                             {user.role !== ROLE.ADMIN && (
                                 <button
-                                    className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
+                                    className="p-1 min-w-0 bg-aurora-red text-white text-xl rounded-md"
                                     onClick={() =>
                                         handleRequest(user, ROLE.NON_PRIVILEGED)
                                     }
@@ -112,7 +112,7 @@ const UserAdminTable = () => {
                         <td>
                             {user.role !== ROLE.ADMIN && (
                                 <button
-                                    className="p-1 min-w-0 bg-red-600 hover:bg-red-900 text-white text-xl rounded-md"
+                                    className="p-1 min-w-0 bg-aurora-red text-white text-xl rounded-md"
                                     onClick={() => deleteUser(user.id)}
                                 >
                                     Delete User

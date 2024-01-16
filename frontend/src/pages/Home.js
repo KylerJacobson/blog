@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import "./Home.css";
 import axios from "axios";
 import PostCard from "../components/PostCard";
+import "../components/PostCard.css";
 import { AuthContext } from "../contexts/AuthContext";
 
 function Home() {
@@ -24,9 +25,8 @@ function Home() {
     }, [currentUser, refreshPosts]);
 
     const handlePostDelete = () => {
-        setRefreshPosts((prev) => !prev); // Toggle the state to refresh posts
+        setRefreshPosts((prev) => !prev);
     };
-
     return (
         <div className="home">
             {posts.length > 0 ? (

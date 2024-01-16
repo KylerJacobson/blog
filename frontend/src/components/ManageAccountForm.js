@@ -184,7 +184,7 @@ const ManageAccountForm = () => {
                         )}
                         <div className="mt-5 mb-3" style={{ height: "20px" }}>
                             {showSuccessMessage && (
-                                <div style={{ color: "green" }}>
+                                <div style={{ color: "#A3BE8C" }}>
                                     Account successfully updated
                                 </div>
                             )}
@@ -192,7 +192,7 @@ const ManageAccountForm = () => {
 
                         <button
                             type="submit"
-                            className="w-full p-2 m-auto bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4  rounded"
+                            className="w-full p-2 m-auto bg-aurora-green text-white py-2 px-4  rounded"
                         >
                             Update Account
                         </button>
