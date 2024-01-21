@@ -3,6 +3,7 @@ const app = express();
 const path = require("path");
 const session = require("express-session");
 const multer = require("multer");
+const { rateLimit } = require("express-rate-limit");
 require("dotenv").config();
 
 const UserDao = require("../server/models/userDao");
@@ -38,9 +39,26 @@ const MEDIA_PATH = "/media";
 const SESSION_PATH = "/session";
 const POST_PATH = "/posts";
 
+const defaultLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: "Too many login attempts, please try again after 15 minutes.",
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "public/")));
+
+app.set("trust proxy", 2); // This is the number of proxies in front of the service. https://github.com/express-rate-limit/express-rate-limit/wiki/Troubleshooting-Proxy-Issues
 
 app.use(
     session({
@@ -55,7 +73,19 @@ app.use(
     })
 );
 
+// ------------------------------------------- Session Routes -------------------------------------------
+
+app.post(`${LOCAL_API}${SESSION_PATH}`, loginLimiter, (req, res) =>
+    sessionController.create(req, res)
+);
+
+app.delete(`${LOCAL_API}${SESSION_PATH}`, (req, res) =>
+    sessionController.destroy(req, res)
+);
+
 // --------------------------------------------- User Routes --------------------------------------------
+
+app.use(defaultLimiter);
 
 app.post(`${LOCAL_API}${USER_PATH}`, (req, res) =>
     userController.create(req, res)
@@ -75,16 +105,6 @@ app.put(`${LOCAL_API}${USER_PATH}`, verifyToken, (req, res) =>
 
 app.delete(`${LOCAL_API}${USER_PATH}/:userId`, verifyToken, (req, res) =>
     userController.destroy(req, res)
-);
-
-// ------------------------------------------- Session Routes -------------------------------------------
-
-app.post(`${LOCAL_API}${SESSION_PATH}`, (req, res) =>
-    sessionController.create(req, res)
-);
-
-app.delete(`${LOCAL_API}${SESSION_PATH}`, (req, res) =>
-    sessionController.destroy(req, res)
 );
 
 // --------------------------------------------- Post Routes --------------------------------------------
