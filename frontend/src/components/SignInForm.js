@@ -7,6 +7,7 @@ import "./form.css";
 
 const SignInForm = () => {
     const [validLogin, setValidLogin] = useState();
+    const [limited, setLimited] = useState(false);
     const { setCurrentUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -24,15 +25,19 @@ const SignInForm = () => {
             if (response.status !== 200) {
                 throw new Error("Sign in failed");
             }
-            setValidLogin(true);
             const { data: user } = await axios.get(`/api/user`, {
                 withCredentials: true,
             });
             setCurrentUser(user);
             navigate("/");
         } catch (error) {
-            console.error("There was an error submitting the form", error);
-            setValidLogin(false);
+            if (error.response.status === 429) {
+                console.error("User is rate-limited", error);
+                setLimited(true);
+            } else {
+                console.error("There was an error submitting the form", error);
+                setValidLogin(false);
+            }
         }
     };
 
@@ -41,6 +46,8 @@ const SignInForm = () => {
             <div className="w-full p-6 m-auto bg-white rounded-md ring-2 shadow-md shadow-slate-600/80 ring-slate-600 lg:max-w-xl">
                 <form
                     onSubmit={handleSubmit((formData) => {
+                        setValidLogin(true);
+                        setLimited(false);
                         signIn(formData);
                     })}
                 >
@@ -71,9 +78,15 @@ const SignInForm = () => {
                         )}
                     </div>
                     <div>
-                        {validLogin === false && (
+                        {validLogin === false && limited === false && (
                             <p className="errorMsg">
                                 Invalid email or password
+                            </p>
+                        )}
+                        {limited === true && (
+                            <p className="errorMsg">
+                                Too many log-in attempts, try again in 15
+                                minutes
                             </p>
                         )}
                         <button
