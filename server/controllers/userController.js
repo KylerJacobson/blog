@@ -1,8 +1,9 @@
 const { ROLE } = require("../constants/roleConstants");
 
 class UserController {
-    constructor(userDao) {
+    constructor(userDao, notificationController) {
         this.userDao = userDao;
+        this.notificationController = notificationController;
     }
 
     async create(req, res) {
@@ -30,6 +31,12 @@ class UserController {
                 if (userId) {
                     res.status(200).json({
                         message: "Account successfully created",
+                    });
+                    this.notificationController.newUserNotify({
+                        firstName,
+                        lastName,
+                        restricted,
+                        emailNotification,
                     });
                 }
             }
