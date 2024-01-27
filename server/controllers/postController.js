@@ -25,7 +25,7 @@ class PostController {
             if (post) {
                 const users = await this.userDao.getUsersWithNotifications();
                 users.map((user) => {
-                    this.notificationController.notify(user, post);
+                    this.notificationController.newPostNotify(user, post);
                 });
                 res.status(200).json(post.post_id);
             }

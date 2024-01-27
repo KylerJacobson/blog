@@ -24,7 +24,7 @@ const userDao = new UserDao();
 const postDao = new PostDao();
 const mediaDao = new MediaDao();
 const notificationService = new NotificationService();
-const userController = new UserController(userDao);
+const userController = new UserController(userDao, notificationService);
 const sessionController = new SessionController(userDao);
 const postController = new PostController(
     postDao,
