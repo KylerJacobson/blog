@@ -20,7 +20,7 @@ class MediaController {
         }
         const files = req.files;
         const postId = req.body.postId;
-        const restricted = req.body.restricted;
+        const restricted = req.body.restricted === "true";
         const blobServiceClient = BlobServiceClient.fromConnectionString(
             process.env.AZURE_STORAGE_CONNECTION_STRING
         );
