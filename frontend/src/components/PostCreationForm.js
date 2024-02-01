@@ -103,9 +103,9 @@ const PostCreationFrom = () => {
     const handleUpload = async (postId, restricted) => {
         if (files) {
             const formData = new FormData();
+            formData.append("restricted", restricted);
             for (const file of files) {
                 formData.append("photos", file);
-                formData.append("restricted", restricted);
             }
             formData.append("postId", postId);
             try {
