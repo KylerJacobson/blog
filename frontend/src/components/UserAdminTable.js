@@ -1,23 +1,39 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import convertUtcToLocal from "../helpers/helpers";
 
 import { ROLE } from "../constants/roleConstants";
 
 const UserAdminTable = () => {
+    const navigate = useNavigate();
     const [data, setData] = useState([]);
     const fetchUsers = async () => {
-        const response = await axios.get("/api/user/list", {
-            withCredentials: true,
-        });
-        setData(response.data);
+
+        try {
+            const response = await axios.get("/api/user/list", {
+                withCredentials: true,
+            });
+            setData(response.data);
+        } catch (error) {
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                navigate("/signIn");
+            } else {
+                // Handle other errors appropriately
+                console.error("Error fetching users:", error);
+            }
+        }
     };
 
     const handleRequest = async (user, role) => {
         try {
-            const response = await axios.put(`/api/user`, {
-                user: user,
+            const response = await axios.put(`/api/user/${user.id}`, {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
                 role: role,
+                emailNotification: user.emailNotification,
             });
             if (response.status === 200) {
                 fetchUsers();

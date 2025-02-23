@@ -94,14 +94,14 @@ function Post() {
                 {media.length > 0
                     ? media.map((item, index) => (
                           <div key={index}>
-                              {item.content_type.startsWith("image/") && (
+                              {item.contentType.startsWith("image/") && (
                                   <img src={item.url} alt="images for post" />
                               )}
-                              {item.content_type === "video/mp4" && (
+                              {item.contentType === "video/mp4" && (
                                   <video controls>
                                       <source
                                           src={item.url}
-                                          type={item.content_type}
+                                          type={item.contentType}
                                       ></source>
                                       Your browser does not support the video
                                       tag
