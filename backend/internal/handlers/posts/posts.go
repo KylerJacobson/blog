@@ -8,10 +8,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/KylerJacobson/blog/backend/internal/api/types/posts"
 	post_models "github.com/KylerJacobson/blog/backend/internal/api/types/posts"
 	"github.com/KylerJacobson/blog/backend/internal/authorization"
 	posts_repo "github.com/KylerJacobson/blog/backend/internal/db/posts"
+	users_repo "github.com/KylerJacobson/blog/backend/internal/db/users"
 	"github.com/KylerJacobson/blog/backend/internal/handlers/session"
+	"github.com/KylerJacobson/blog/backend/internal/services/notifications"
 	"github.com/KylerJacobson/blog/backend/logger"
 	v5 "github.com/jackc/pgx/v5"
 )
@@ -26,12 +29,16 @@ type PostsApi interface {
 
 type postsApi struct {
 	postsRepository posts_repo.PostsRepository
+	usersRepository users_repo.UsersRepository
+	notifier        *notifications.Notifier
 	logger          logger.Logger
 }
 
-func New(postsRepo posts_repo.PostsRepository, logger logger.Logger) *postsApi {
+func New(postsRepo posts_repo.PostsRepository, usersRepo users_repo.UsersRepository, notifier *notifications.Notifier, logger logger.Logger) *postsApi {
 	return &postsApi{
 		postsRepository: postsRepo,
+		usersRepository: usersRepo,
+		notifier:        notifier,
 		logger:          logger,
 	}
 }
@@ -166,6 +173,26 @@ func (postsApi *postsApi) DeletePostById(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (postsApi *postsApi) NotifyOnNewPost(post posts.PostRequestBody) error {
+	users, err := postsApi.usersRepository.GetAllUsersWithEmailNotification()
+	if err != nil {
+		postsApi.logger.Sugar().Errorf("error getting all users with email notification: %v", err)
+		return err
+	}
+	for _, user := range users {
+		if post.Restricted && user.Role != 2 {
+			continue
+		}
+		postsApi.logger.Sugar().Infof("Notifying user (%s) of new post", user.Email)
+		err := postsApi.notifier.NewPost(user, post)
+		if err != nil {
+			postsApi.logger.Sugar().Errorf("error notifying user (%s) of new post: %v", user.Email, err)
+
+		}
+	}
+	return nil
+}
+
 func (postsApi *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	token := session.Manager.GetString(r.Context(), "session_token")
@@ -203,6 +230,16 @@ func (postsApi *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 		w.Write(b)
 		return
 	}
+
+	err = postsApi.NotifyOnNewPost(post.PostRequestBody)
+	if err != nil {
+		postsApi.logger.Sugar().Errorf("error notifying users of new post (%s) : %v", post.Title, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		b, _ := json.Marshal(err)
+		w.Write(b)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	b, _ := json.Marshal(postId)
 	w.Write(b)

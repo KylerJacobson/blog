@@ -19,6 +19,7 @@ type UsersRepository interface {
 	GetAllUsers() (*[]user_models.FrontendUser, error)
 	DeleteUserById(id int) error
 	LoginUser(user user_models.UserLogin) (*user_models.User, error)
+	GetAllUsersWithEmailNotification() ([]user_models.User, error)
 }
 
 type usersRepository struct {
@@ -31,6 +32,20 @@ func New(conn *pgxpool.Pool, logger logger.Logger) *usersRepository {
 		conn:   conn,
 		logger: logger,
 	}
+}
+
+func (repository *usersRepository) GetAllUsersWithEmailNotification() ([]user_models.User, error) {
+	rows, err := repository.conn.Query(context.TODO(), `SELECT id, first_name, last_name, email, role, email_notification FROM users WHERE email_notification = true`)
+	if err != nil {
+		repository.logger.Sugar().Errorf("Error retrieving users from the database: %v", err)
+		return nil, err
+	}
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[user_models.User])
+	if err != nil {
+		repository.logger.Sugar().Errorf("Error getting user: %v", err)
+		return nil, err
+	}
+	return users, nil
 }
 
 func (repository *usersRepository) GetUserById(id int) (*user_models.User, error) {

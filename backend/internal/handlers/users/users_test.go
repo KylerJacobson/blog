@@ -48,6 +48,11 @@ func (m *mockUsersRepository) LoginUser(user userModels.UserLogin) (*userModels.
 	panic("implement me")
 }
 
+func (m *mockUsersRepository) GetAllUsersWithEmailNotification() ([]userModels.User, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *mockUsersRepository) CreateUser(user userModels.UserCreate) (string, error) {
 	args := m.Called(user)
 	return args.Get(0).(string), args.Error(1)
