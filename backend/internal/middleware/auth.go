@@ -61,7 +61,7 @@ func (m *AuthMiddleware) RequireAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func EnableCORS(next http.HandlerFunc) http.HandlerFunc {
+func (m *AuthMiddleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
