@@ -2,10 +2,14 @@ package media
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/KylerJacobson/blog/backend/internal/authorization"
 	media_repo "github.com/KylerJacobson/blog/backend/internal/db/media"
@@ -13,6 +17,27 @@ import (
 	"github.com/KylerJacobson/blog/backend/internal/services/azure"
 	"github.com/KylerJacobson/blog/backend/logger"
 )
+
+const (
+	MaxFileSize        = 10 << 20 // 10 MB
+	MaxTotalUploadSize = 50 << 20 // 50 MB
+	MaxFilesPerRequest = 5        // Maximum number of files per upload
+)
+
+var AllowedFileTypes = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/gif":  true,
+	"video/mp4":  true,
+}
+
+// FileTypeExtensions maps content types to file extensions
+var FileTypeExtensions = map[string]string{
+	"image/jpeg": ".jpg",
+	"image/png":  ".png",
+	"image/gif":  ".gif",
+	"video/mp4":  ".mp4",
+}
 
 type MediaApi interface {
 	GetMediaByPostId(w http.ResponseWriter, r *http.Request)
@@ -108,59 +133,103 @@ func (m *mediaApi) DeleteMediaByPostId(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
-	// Limit the size of the incoming request to 10 MB
-	r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // 10 MB
+	r.Body = http.MaxBytesReader(w, r.Body, MaxFileSize)
 
 	// Parse the multipart form data
-	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	err := r.ParseMultipartForm(MaxTotalUploadSize)
 	if err != nil {
-		httperr.Write(w, httperr.BadRequest("file too large", ""))
+		if errors.Is(err, http.ErrNotMultipart) {
+			httperr.Write(w, httperr.BadRequest("Not a multipart request", "Use multipart/form-data encoding"))
+			return
+		}
+		if strings.Contains(err.Error(), "request body too large") {
+			httperr.Write(w, httperr.BadRequest("Request too large",
+				fmt.Sprintf("Maximum upload size is %d MB", MaxTotalUploadSize/(1<<20))))
+			return
+		}
+		m.logger.Sugar().Errorf("Error parsing form: %v", err)
+		httperr.Write(w, httperr.Internal("Error processing upload", ""))
 		return
 	}
 
 	// Retrieve the files from the "files" form field
-	restricted := r.Form.Get("restricted")
-	postId := r.Form.Get("postId")
-	iPostId, err := strconv.Atoi(postId)
+	restrictedStr := r.Form.Get("restricted")
+	postIdStr := r.Form.Get("postId")
+	postId, err := strconv.Atoi(postIdStr)
 	if err != nil {
 		m.logger.Sugar().Errorf("postId parameter was not an integer: %v", err)
 		httperr.Write(w, httperr.BadRequest("postId must be an integer", ""))
 		return
 	}
-	bRestricted, err := strconv.ParseBool(restricted)
+	restricted, err := strconv.ParseBool(restrictedStr)
 	if err != nil {
 		m.logger.Sugar().Errorf("restricted parameter was not a boolean: %v", err)
 		httperr.Write(w, httperr.BadRequest("restricted must be a boolean", ""))
 		return
 	}
+
 	files := r.MultipartForm.File["photos"]
 	if files == nil {
 		httperr.Write(w, httperr.BadRequest("no files found", ""))
 		return
 	}
+
+	successfulUploads := 0
+	failedUploads := 0
 	for _, fileHeader := range files {
-		// Process each file
-		blobName := "blog-media/" + fileHeader.Filename
-		err := m.azClient.UploadFileToBlob(fileHeader, blobName)
-		if err != nil {
-			m.logger.Sugar().Errorf("Error uploading media: %v", err)
-			httperr.Write(w, httperr.Internal("internal server error", ""))
-			return
-		}
 		fileType, err := getFileContentType(fileHeader)
 		if err != nil {
 			m.logger.Sugar().Errorf("error getting the mime type of the file: %v", err)
 			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
-		err = m.mediaRepository.UploadMedia(iPostId, blobName, fileType, bRestricted)
+
+		if !AllowedFileTypes[fileType] {
+			m.logger.Sugar().Warnf("Invalid file type: %s for file %s", fileType, fileHeader.Filename)
+			failedUploads++
+			continue
+		}
+
+		safeFilename := sanitizeFilename(fileHeader.Filename)
+
+		blobName := fmt.Sprintf("blog-media/%d_%s", postId, safeFilename)
+		err = m.azClient.UploadFileToBlob(fileHeader, blobName)
 		if err != nil {
-			m.logger.Sugar().Errorf("Error uploading media reference to database: %v", err)
+			failedUploads++
+			m.logger.Sugar().Errorf("Error uploading media: %v", err)
 			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
+		err = m.mediaRepository.UploadMedia(postId, blobName, fileType, restricted)
+		if err != nil {
+			// TODO delete the blob since the database entry failed
+			m.logger.Sugar().Errorf("Error uploading media reference to database: %v", err)
+			httperr.Write(w, httperr.Internal("internal server error", ""))
+			continue
+		}
+		successfulUploads++
 	}
-	w.WriteHeader(http.StatusNoContent)
+	if successfulUploads == 0 && failedUploads > 0 {
+		httperr.Write(w, httperr.BadRequest("All uploads failed", "Check logs for details"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if failedUploads > 0 {
+		w.WriteHeader(http.StatusPartialContent)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message":    "Some files were uploaded successfully",
+			"successful": successfulUploads,
+			"failed":     failedUploads,
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "All files uploaded successfully",
+		"count":   successfulUploads,
+	})
 }
 
 func getFileContentType(fileHeader *multipart.FileHeader) (string, error) {
@@ -187,4 +256,19 @@ func getFileContentType(fileHeader *multipart.FileHeader) (string, error) {
 	}
 
 	return contentType, nil
+}
+
+func sanitizeFilename(filename string) string {
+	filename = filepath.Base(filename)
+
+	invalidChars := []string{"\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
+	for _, char := range invalidChars {
+		filename = strings.ReplaceAll(filename, char, "_")
+	}
+	if len(filename) > 100 {
+		ext := filepath.Ext(filename)
+		filename = filename[:100-len(ext)] + ext
+	}
+
+	return filename
 }
