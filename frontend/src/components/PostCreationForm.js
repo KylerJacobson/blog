@@ -37,13 +37,11 @@ const PostCreationFrom = () => {
                         content: data.content,
                         restricted: data.restricted,
                     });
-                    console.log("Getting media for post", postId);
                     const response = await axios.get(`/api/media/${postId}`, {
                         withCredentials: true,
                     });
                     if (response.status === 200) {
                         setMedia(response.data);
-                        console.log("Media", response.data);
                     }
                 } catch (error) {
                     console.error(error);
@@ -279,7 +277,6 @@ const PostCreationFrom = () => {
                     <div>
                         <ul>
                             {files.map((file) => {
-                                console.log("file", file);
                                 return <li>{file?.name}</li>;
                             })}
                         </ul>

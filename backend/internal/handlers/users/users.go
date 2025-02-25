@@ -267,9 +267,7 @@ func (usersApi *usersApi) GetUserFromSession(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	token := session.Manager.GetString(r.Context(), "session_token")
-	fmt.Println(token)
 	claims := authorization.DecodeToken(token)
-	fmt.Println(claims)
 	user, err := usersApi.usersRepository.GetUserById(claims.Sub)
 	if err != nil {
 		if errors.Is(err, pgxv5.ErrNoRows) {

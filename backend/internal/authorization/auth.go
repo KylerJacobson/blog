@@ -45,13 +45,16 @@ func DecodeToken(token string) *UserClaim {
 	})
 	if err != nil {
 		return nil
-	} else if claims, ok := parsedToken.Claims.(*UserClaim); ok {
-		fmt.Println(claims.Sub, claims.RegisteredClaims.Issuer)
-		return claims
-	} else {
+	}
+
+	claims, ok := parsedToken.Claims.(*UserClaim)
+	if !ok {
 		log.Fatal("unknown claims type, cannot proceed")
 		return nil
 	}
+
+	fmt.Println(claims.Sub, claims.RegisteredClaims.Issuer)
+	return claims
 }
 
 func CheckPrivilege(token string) bool {

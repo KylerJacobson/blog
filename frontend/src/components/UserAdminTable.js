@@ -95,12 +95,12 @@ const UserAdminTable = () => {
                         key={index}
                     >
                         <td>
-                            {user.first_name} {user.last_name}
+                            {user.firstName} {user.lastName}
                         </td>
                         <td>{user.email}</td>
                         <td>{formatRole(user.role)}</td>
-                        <td>{user.email_notification && "Enabled"}</td>
-                        <td>{convertUtcToLocal(user.created_at)}</td>
+                        <td>{user.emailNotification && "Enabled"}</td>
+                        <td>{convertUtcToLocal(user.createdAt)}</td>
                         <td>
                             {user.role !== ROLE.ADMIN && (
                                 <button

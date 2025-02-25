@@ -11,7 +11,6 @@ import (
 	"github.com/KylerJacobson/blog/backend/internal/services/emailer"
 	"github.com/KylerJacobson/blog/backend/internal/services/notifications"
 
-	"github.com/KylerJacobson/blog/backend/internal/authorization"
 	"github.com/KylerJacobson/blog/backend/internal/db/config"
 
 	mediaRepo "github.com/KylerJacobson/blog/backend/internal/db/media"
@@ -80,7 +79,7 @@ func main() {
 	// ---------------------------- Session ----------------------------
 
 	mux.HandleFunc("POST /api/session", m.EnableCORS(sessionApi.CreateSession))
-	mux.HandleFunc("POST /api/verifyToken", m.EnableCORS(authorization.VerifyToken))
+	//mux.HandleFunc("POST /api/verifyToken", m.EnableCORS(authorization.VerifyToken))
 	mux.HandleFunc("DELETE /api/session", m.EnableCORS(sessionApi.DeleteSession))
 
 	// ---------------------------- Media ----------------------------

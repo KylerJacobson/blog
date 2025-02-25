@@ -2,7 +2,6 @@ package session
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -87,7 +86,6 @@ func (sessionApi *sessionApi) CreateSession(w http.ResponseWriter, r *http.Reque
 	// Sign and get the complete encoded token as a string using the secret
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	fmt.Println(ss, err)
 	Manager.Put(r.Context(), "session_token", ss)
 	w.WriteHeader(http.StatusOK)
 	b, _ := json.Marshal(ss)

@@ -1,11 +1,3 @@
-# # Frontend
-# FROM node:latest AS build
-# WORKDIR /app
-# COPY frontend/package*.json ./
-# RUN npm install
-# COPY frontend/ ./
-# RUN npm run build
-
 FROM node:18-alpine AS frontend-builder
 
 # Set the working directory

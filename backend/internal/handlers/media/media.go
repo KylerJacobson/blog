@@ -2,7 +2,6 @@ package media
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -137,8 +136,6 @@ func (mediaApi *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the files from the "files" form field
 	restricted := r.Form.Get("restricted")
 	postId := r.Form.Get("postId")
-	fmt.Println(restricted)
-	fmt.Println(postId)
 	iPostId, err := strconv.Atoi(postId)
 	if err != nil {
 		mediaApi.logger.Sugar().Errorf("postId parameter was not an integer: %v", err)

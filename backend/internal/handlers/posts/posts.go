@@ -67,12 +67,7 @@ func (postsApi *postsApi) GetRecentPosts(w http.ResponseWriter, r *http.Request)
 func (postsApi *postsApi) GetPosts(w http.ResponseWriter, r *http.Request) {
 	token := session.Manager.GetString(r.Context(), "session_token")
 
-	fmt.Println(token)
 	claims := authorization.DecodeToken(token)
-	fmt.Println(claims)
-	// NON_PRIVILEGED: 0,
-	// ADMIN: 1,
-	// PRIVILEGED: 2,
 	var posts = []post_models.Post{}
 	var err = errors.New("")
 	if claims != nil && claims.ExpiresAt.Time.After(time.Now()) && (claims.Role == 1 || claims.Role == 2) {
@@ -197,13 +192,10 @@ func (postsApi *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	token := session.Manager.GetString(r.Context(), "session_token")
 
-	fmt.Println(token)
 	claims := authorization.DecodeToken(token)
-	fmt.Println(claims)
 
 	var post post_models.FrontendPostRequest
-	// bytedata, _ := io.ReadAll(r.Body)
-	// fmt.Println(string(bytedata))
+
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
 		postsApi.logger.Sugar().Errorf("Error decoding the post request body: %v", err)
@@ -249,9 +241,7 @@ func (postsApi *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 func (postsApi *postsApi) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	token := session.Manager.GetString(r.Context(), "session_token")
 
-	fmt.Println(token)
 	claims := authorization.DecodeToken(token)
-	fmt.Println(claims)
 	var post post_models.FrontendPostRequest
 	id := r.PathValue("id")
 	postId, err := strconv.Atoi(id)

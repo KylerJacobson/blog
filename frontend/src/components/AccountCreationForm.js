@@ -30,14 +30,11 @@ const AccountCreationForm = () => {
 
     const createAccount = async (accountDetails) => {
         try {
-            console.log("accountDetails", accountDetails);
-            
             if (accountDetails?.restricted === true) {
                 accountDetails.restricted = -1;
             } else {
                 accountDetails.restricted = 0;
             }
-            console.log("Updated account", accountDetails);
             const response = await axios.post("/api/user", {
                 accountDetails,
             });
