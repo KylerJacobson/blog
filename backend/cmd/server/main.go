@@ -72,38 +72,38 @@ func main() {
 	mediaApi := media.New(mediaRepo.New(dbPool, zapLogger), authService, zapLogger, azureClient)
 
 	// ---------------------------- Posts ----------------------------
-	mux.HandleFunc("GET /api/posts", am.EnableCORS(rl.Limit(postsApi.GetPosts)))
-	mux.HandleFunc("GET /api/posts/recent", am.EnableCORS(rl.Limit(postsApi.GetRecentPosts)))
-	mux.HandleFunc("GET /api/posts/{id}", am.EnableCORS(rl.Limit(postsApi.GetPostById)))
-	mux.HandleFunc("DELETE /api/posts/{id}", am.EnableCORS(rl.Limit(am.RequireAdmin(postsApi.DeletePostById))))
-	mux.HandleFunc("POST /api/posts", am.EnableCORS(rl.Limit(am.RequireAdmin(postsApi.CreatePost))))
-	mux.HandleFunc("PUT /api/posts/{id}", am.EnableCORS(rl.Limit(am.RequireAdmin(postsApi.UpdatePost))))
+	mux.HandleFunc("GET /api/posts", am.SecurityHeaders(am.EnableCORS(rl.Limit(postsApi.GetPosts))))
+	mux.HandleFunc("GET /api/posts/recent", am.SecurityHeaders(am.EnableCORS(rl.Limit(postsApi.GetRecentPosts))))
+	mux.HandleFunc("GET /api/posts/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(postsApi.GetPostById))))
+	mux.HandleFunc("DELETE /api/posts/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(postsApi.DeletePostById)))))
+	mux.HandleFunc("POST /api/posts", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(postsApi.CreatePost)))))
+	mux.HandleFunc("PUT /api/posts/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(postsApi.UpdatePost)))))
 
 	// ---------------------------- Users ----------------------------
-	mux.HandleFunc("POST /api/user", am.EnableCORS(rl.Limit(usersApi.CreateUser)))
-	mux.HandleFunc("GET /api/user", am.EnableCORS(rl.Limit(usersApi.GetUserFromSession)))
-	mux.HandleFunc("GET /api/user/{id}", am.EnableCORS(rl.Limit(usersApi.GetUserById)))
-	mux.HandleFunc("PUT /api/user/{id}", am.EnableCORS(rl.Limit(usersApi.UpdateUser)))
-	mux.HandleFunc("DELETE /api/user/{id}", am.EnableCORS(rl.Limit(usersApi.DeleteUserById)))
+	mux.HandleFunc("POST /api/user", am.SecurityHeaders(am.EnableCORS(rl.Limit(usersApi.CreateUser))))
+	mux.HandleFunc("GET /api/user", am.SecurityHeaders(am.EnableCORS(rl.Limit(usersApi.GetUserFromSession))))
+	mux.HandleFunc("GET /api/user/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(usersApi.GetUserById))))
+	mux.HandleFunc("PUT /api/user/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(usersApi.UpdateUser))))
+	mux.HandleFunc("DELETE /api/user/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(usersApi.DeleteUserById))))
 
 	// ---------------------------- Admin ----------------------------
-	mux.HandleFunc("GET /api/user/list", am.EnableCORS(rl.Limit(am.RequireAdmin(usersApi.ListUsers))))
+	mux.HandleFunc("GET /api/user/list", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(usersApi.ListUsers)))))
 
 	// ---------------------------- Session ----------------------------
 
-	mux.HandleFunc("POST /api/session", am.EnableCORS(rl.StrictLimit(sessionApi.CreateSession)))
-	mux.HandleFunc("DELETE /api/session", am.EnableCORS(rl.Limit(sessionApi.DeleteSession)))
+	mux.HandleFunc("POST /api/session", am.SecurityHeaders(am.EnableCORS(rl.StrictLimit(sessionApi.CreateSession))))
+	mux.HandleFunc("DELETE /api/session", am.SecurityHeaders(am.EnableCORS(rl.Limit(sessionApi.DeleteSession))))
 
 	// ---------------------------- Media ----------------------------
-	mux.HandleFunc("POST /api/media", am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.UploadMedia))))
-	mux.HandleFunc("GET /api/media/{id}", am.EnableCORS(rl.Limit(mediaApi.GetMediaByPostId)))
-	mux.HandleFunc("DELETE /api/media/{id}", am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.DeleteMediaByPostId))))
+	mux.HandleFunc("POST /api/media", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.UploadMedia)))))
+	mux.HandleFunc("GET /api/media/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(mediaApi.GetMediaByPostId))))
+	mux.HandleFunc("DELETE /api/media/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.DeleteMediaByPostId)))))
 
 	// Serve static files from the React build directory
 	fs := http.FileServer(http.Dir("public"))
 
 	// Handle all non-API routes by serving the React app
-	mux.HandleFunc("GET /*", am.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /*", am.SecurityHeaders(am.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
 		// Don't handle API routes here
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			http.NotFound(w, r)
@@ -118,7 +118,7 @@ func main() {
 
 		// Serve static files (CSS, JS, images, etc.)
 		fs.ServeHTTP(w, r)
-	}))
+	})))
 
 	zapLogger.Sugar().Infof("Logging level set to %s", env)
 	zapLogger.Sugar().Infof("listening on port: %d", 8080)
