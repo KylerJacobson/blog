@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	userModels "github.com/KylerJacobson/blog/backend/internal/api/types/users"
+	"github.com/KylerJacobson/blog/backend/internal/authorization"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
@@ -177,6 +178,7 @@ func TestCreateUser(t *testing.T) {
 			// Create a new mock repository
 			mockRepo := new(mockUsersRepository)
 
+			authService := authorization.NewAuthService(zap.NewNop())
 			// Creat test logger
 			testLogger := zap.NewNop()
 
@@ -186,7 +188,7 @@ func TestCreateUser(t *testing.T) {
 			}
 
 			// Create API instance
-			usersApi := New(mockRepo, testLogger)
+			usersApi := New(mockRepo, authService, testLogger)
 
 			// Create request body
 			var bodyBytes []byte

@@ -9,7 +9,7 @@ import (
 
 	"github.com/KylerJacobson/blog/backend/internal/authorization"
 	media_repo "github.com/KylerJacobson/blog/backend/internal/db/media"
-	"github.com/KylerJacobson/blog/backend/internal/handlers/session"
+	"github.com/KylerJacobson/blog/backend/internal/httperr"
 	"github.com/KylerJacobson/blog/backend/internal/services/azure"
 	"github.com/KylerJacobson/blog/backend/logger"
 )
@@ -22,31 +22,32 @@ type MediaApi interface {
 
 type mediaApi struct {
 	mediaRepository media_repo.MediaRepository
+	auth            *authorization.AuthService
 	logger          logger.Logger
 	azClient        *azure.AzureClient
 }
 
-func New(mediaRepo media_repo.MediaRepository, logger logger.Logger, client *azure.AzureClient) *mediaApi {
+func New(mediaRepo media_repo.MediaRepository, auth *authorization.AuthService, logger logger.Logger, client *azure.AzureClient) *mediaApi {
 	return &mediaApi{
 		mediaRepository: mediaRepo,
+		auth:            auth,
 		logger:          logger,
 		azClient:        client,
 	}
 }
 
-func (mediaApi *mediaApi) GetMediaByPostId(w http.ResponseWriter, r *http.Request) {
+func (m *mediaApi) GetMediaByPostId(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	postId, err := strconv.Atoi(id)
 	if err != nil {
-		mediaApi.logger.Sugar().Errorf("GetPostId parameter was not an integer: %v", err)
-		http.Error(w, "postId must be an integer", http.StatusBadRequest)
+		m.logger.Sugar().Errorf("GetPostId parameter was not an integer: %v", err)
+		httperr.Write(w, httperr.BadRequest("postId must be an integer", ""))
 		return
 	}
 
-	token := session.Manager.GetString(r.Context(), "session_token")
-	privilege := authorization.CheckPrivilege(token)
+	privilege := m.auth.CheckPrivilege(r)
 
-	media, err := mediaApi.mediaRepository.GetMediaByPostId(postId)
+	media, err := m.mediaRepository.GetMediaByPostId(postId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		b, _ := json.Marshal(err)
@@ -65,71 +66,55 @@ func (mediaApi *mediaApi) GetMediaByPostId(w http.ResponseWriter, r *http.Reques
 	var postMediaSlc = []postMedia{}
 	for _, attachment := range media {
 		//Check auth status
-		url, err := mediaApi.azClient.GetUrlForBlob(attachment.BlobName)
+		url, err := m.azClient.GetUrlForBlob(attachment.BlobName)
 		if err != nil {
-			mediaApi.logger.Sugar().Errorf("error getting URL for blob: %v", err)
-			http.Error(w, "postId must be an integer", http.StatusInternalServerError)
+			m.logger.Sugar().Errorf("error getting URL for blob: %v", err)
+			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
 		postMediaSlc = append(postMediaSlc, postMedia{Url: url, ContentType: attachment.ContentType, Name: attachment.BlobName, PostId: attachment.PostId})
 		if attachment.Restricted {
 			if !privilege {
-				http.Error(w, "user does not have access to restricted posts", http.StatusForbidden)
+				httperr.Write(w, httperr.Forbidden("insufficient privileges", ""))
 				return
 			}
 		}
 	}
 	b, err := json.Marshal(postMediaSlc)
 	if err != nil {
-		mediaApi.logger.Sugar().Errorf("error marshalling media post for post %d : %v", postId, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		m.logger.Sugar().Errorf("error marshalling media post for post %d : %v", postId, err)
+		httperr.Write(w, httperr.Internal("internal server error", ""))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
 }
 
-func (mediaApi *mediaApi) DeleteMediaByPostId(w http.ResponseWriter, r *http.Request) {
+func (m *mediaApi) DeleteMediaByPostId(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	postId, err := strconv.Atoi(id)
 	if err != nil {
-		mediaApi.logger.Sugar().Errorf("GetPostId parameter was not an integer: %v", err)
-		http.Error(w, "postId must be an integer", http.StatusBadRequest)
+		m.logger.Sugar().Errorf("GetPostId parameter was not an integer: %v", err)
+		httperr.Write(w, httperr.BadRequest("postId must be an integer", ""))
 		return
 	}
 
-	token := session.Manager.GetString(r.Context(), "session_token")
-	claims := authorization.DecodeToken(token)
-	if claims == nil {
-		http.Error(w, "user does not have access to restricted posts", http.StatusForbidden)
-		return
-	}
-	if claims.Role != 1 {
-		http.Error(w, "user does not have access to delete posts", http.StatusForbidden)
-		return
-	}
-
-	err = mediaApi.mediaRepository.DeleteMediaByPostId(postId)
+	err = m.mediaRepository.DeleteMediaByPostId(postId)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		httperr.Write(w, httperr.Internal("internal server error", ""))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (mediaApi *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
-
+func (m *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	// Limit the size of the incoming request to 10 MB
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // 10 MB
 
 	// Parse the multipart form data
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
-		http.Error(w, "Error parsing form data: "+err.Error(), http.StatusBadRequest)
+		httperr.Write(w, httperr.BadRequest("file too large", ""))
 		return
 	}
 
@@ -138,53 +123,44 @@ func (mediaApi *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	postId := r.Form.Get("postId")
 	iPostId, err := strconv.Atoi(postId)
 	if err != nil {
-		mediaApi.logger.Sugar().Errorf("postId parameter was not an integer: %v", err)
-		http.Error(w, "postId must be an integer", http.StatusBadRequest)
+		m.logger.Sugar().Errorf("postId parameter was not an integer: %v", err)
+		httperr.Write(w, httperr.BadRequest("postId must be an integer", ""))
 		return
 	}
 	bRestricted, err := strconv.ParseBool(restricted)
 	if err != nil {
-		mediaApi.logger.Sugar().Errorf("restricted parameter was not a boolean: %v", err)
-		http.Error(w, "postId must be an integer", http.StatusBadRequest)
+		m.logger.Sugar().Errorf("restricted parameter was not a boolean: %v", err)
+		httperr.Write(w, httperr.BadRequest("restricted must be a boolean", ""))
 		return
 	}
 	files := r.MultipartForm.File["photos"]
 	if files == nil {
-		http.Error(w, "No files uploaded", http.StatusBadRequest)
+		httperr.Write(w, httperr.BadRequest("no files found", ""))
 		return
-	}
-	if err != nil {
-		mediaApi.logger.Sugar().Errorf("Error creating the azure blob client: %v", err)
-		// return 500 error
 	}
 	for _, fileHeader := range files {
 		// Process each file
 		blobName := "blog-media/" + fileHeader.Filename
-		err := mediaApi.azClient.UploadFileToBlob(fileHeader, blobName)
+		err := m.azClient.UploadFileToBlob(fileHeader, blobName)
 		if err != nil {
-			mediaApi.logger.Sugar().Errorf("Error uploading media: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			b, _ := json.Marshal(err)
-			w.Write(b)
+			m.logger.Sugar().Errorf("Error uploading media: %v", err)
+			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
 		fileType, err := getFileContentType(fileHeader)
 		if err != nil {
-			mediaApi.logger.Sugar().Errorf("error getting the mime type of the file: %v", err)
-			http.Error(w, "postId must be an integer", http.StatusInternalServerError)
+			m.logger.Sugar().Errorf("error getting the mime type of the file: %v", err)
+			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
-		err = mediaApi.mediaRepository.UploadMedia(iPostId, blobName, fileType, bRestricted)
+		err = m.mediaRepository.UploadMedia(iPostId, blobName, fileType, bRestricted)
 		if err != nil {
-			mediaApi.logger.Sugar().Errorf("Error uploading media reference to database: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			b, _ := json.Marshal(err)
-			w.Write(b)
+			m.logger.Sugar().Errorf("Error uploading media reference to database: %v", err)
+			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Files uploaded successfully"))
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func getFileContentType(fileHeader *multipart.FileHeader) (string, error) {

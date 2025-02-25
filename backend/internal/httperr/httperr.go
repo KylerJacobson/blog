@@ -40,6 +40,14 @@ func Internal(message string, detail string) *Error {
 	return New(http.StatusInternalServerError, message, detail)
 }
 
+func Unauthorized(message string, detail string) *Error {
+	return New(http.StatusUnauthorized, message, detail)
+}
+
+func Forbidden(message string, detail string) *Error {
+	return New(http.StatusUnauthorized, message, detail)
+}
+
 // Write sends the error response to the http.ResponseWriter
 func Write(w http.ResponseWriter, err error) {
 	var httpErr *Error

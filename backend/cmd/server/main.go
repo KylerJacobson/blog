@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/KylerJacobson/blog/backend/internal/authorization"
 	m "github.com/KylerJacobson/blog/backend/internal/middleware"
 	"github.com/KylerJacobson/blog/backend/internal/services/azure"
 	"github.com/KylerJacobson/blog/backend/internal/services/emailer"
@@ -40,6 +41,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	authService := authorization.NewAuthService(zapLogger)
+	authMiddleware := m.NewAuthMiddleware(authService, zapLogger)
 	apiKey := os.Getenv("SENDGRID_API_KEY")
 	if apiKey == "" {
 		zapLogger.Sugar().Errorf("SENDGRID_API_KEY not set")
@@ -52,19 +55,19 @@ func main() {
 
 	usersRepo := usersRepo.New(dbPool, zapLogger)
 	postsRepo := postsRepo.New(dbPool, zapLogger)
-	usersApi := users.New(usersRepo, zapLogger)
-	postsApi := posts.New(postsRepo, usersRepo, notifier, zapLogger)
+	usersApi := users.New(usersRepo, authService, zapLogger)
+	postsApi := posts.New(postsRepo, usersRepo, notifier, authService, zapLogger)
 
 	sessionApi := session.New(usersRepo, zapLogger)
-	mediaApi := media.New(mediaRepo.New(dbPool, zapLogger), zapLogger, azureClient)
+	mediaApi := media.New(mediaRepo.New(dbPool, zapLogger), authService, zapLogger, azureClient)
 
 	// ---------------------------- Posts ----------------------------
 	mux.HandleFunc("GET /api/posts", m.EnableCORS(postsApi.GetPosts))
 	mux.HandleFunc("GET /api/posts/recent", m.EnableCORS(postsApi.GetRecentPosts))
 	mux.HandleFunc("GET /api/posts/{id}", m.EnableCORS(postsApi.GetPostById))
-	mux.HandleFunc("DELETE /api/posts/{id}", m.EnableCORS(postsApi.DeletePostById))
-	mux.HandleFunc("POST /api/posts", m.EnableCORS(postsApi.CreatePost))
-	mux.HandleFunc("PUT /api/posts/{id}", m.EnableCORS(postsApi.UpdatePost))
+	mux.HandleFunc("DELETE /api/posts/{id}", m.EnableCORS(authMiddleware.RequireAdmin(postsApi.DeletePostById)))
+	mux.HandleFunc("POST /api/posts", m.EnableCORS(authMiddleware.RequireAdmin(postsApi.CreatePost)))
+	mux.HandleFunc("PUT /api/posts/{id}", m.EnableCORS(authMiddleware.RequireAdmin(postsApi.UpdatePost)))
 
 	// ---------------------------- Users ----------------------------
 	mux.HandleFunc("POST /api/user", m.EnableCORS(usersApi.CreateUser))
@@ -74,18 +77,17 @@ func main() {
 	mux.HandleFunc("DELETE /api/user/{id}", m.EnableCORS(usersApi.DeleteUserById))
 
 	// ---------------------------- Admin ----------------------------
-	mux.HandleFunc("GET /api/user/list", http.HandlerFunc(m.AuthAdminMiddleware(usersApi.ListUsers)))
+	mux.HandleFunc("GET /api/user/list", m.EnableCORS(authMiddleware.RequireAdmin(usersApi.ListUsers)))
 
 	// ---------------------------- Session ----------------------------
 
 	mux.HandleFunc("POST /api/session", m.EnableCORS(sessionApi.CreateSession))
-	//mux.HandleFunc("POST /api/verifyToken", m.EnableCORS(authorization.VerifyToken))
 	mux.HandleFunc("DELETE /api/session", m.EnableCORS(sessionApi.DeleteSession))
 
 	// ---------------------------- Media ----------------------------
-	mux.HandleFunc("POST /api/media", m.EnableCORS(mediaApi.UploadMedia))
+	mux.HandleFunc("POST /api/media", m.EnableCORS(authMiddleware.RequireAdmin(mediaApi.UploadMedia)))
 	mux.HandleFunc("GET /api/media/{id}", m.EnableCORS(mediaApi.GetMediaByPostId))
-	mux.HandleFunc("DELETE /api/media/{id}", m.EnableCORS(mediaApi.DeleteMediaByPostId))
+	mux.HandleFunc("DELETE /api/media/{id}", m.EnableCORS(authMiddleware.RequireAdmin(mediaApi.DeleteMediaByPostId)))
 
 	// Serve static files from the React build directory
 	fs := http.FileServer(http.Dir("public"))
