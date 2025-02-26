@@ -11,13 +11,22 @@ import (
 )
 
 func GetDBConn(logger logger.Logger) *pgxpool.Pool {
+	var connStr string
+	env := os.Getenv("ENVIRONMENT")
 
-	user := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	db := os.Getenv("POSTGRES_DB")
-	host := os.Getenv("POSTGRES_HOST")
-	port := os.Getenv("POSTGRES_PORT")
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, password, host, port, db)
+	switch env {
+	case "dev":
+		user := os.Getenv("POSTGRES_USER")
+		password := os.Getenv("POSTGRES_PASSWORD")
+		db := os.Getenv("POSTGRES_DB")
+		host := os.Getenv("POSTGRES_HOST")
+		port := os.Getenv("POSTGRES_PORT")
+		connStr = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, password, host, port, db)
+	case "prod":
+		connStr = os.Getenv("DBConnLink")
+	default:
+		return nil
+	}
 
 	logger.Sugar().Infof("Trying to connect to database %s", connStr)
 
@@ -39,9 +48,11 @@ func GetDBConn(logger logger.Logger) *pgxpool.Pool {
 	}
 
 	if err := pool.Ping(context.Background()); err != nil {
+		pool.Close()
 		logger.Sugar().Errorf("Unable to ping database: %v", err)
 		os.Exit(1)
 	}
 
+	logger.Sugar().Info("Successfully connected to database")
 	return pool
 }
