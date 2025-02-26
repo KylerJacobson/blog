@@ -94,7 +94,10 @@ func (m *AuthMiddleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 func (m *AuthMiddleware) SecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Security headers
-		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+		w.Header().Set("Content-Security-Policy",
+			"default-src 'self'; "+
+				"img-src 'self' https://kylerjacobsonmedia.blob.core.windows.net; "+
+				"media-src 'self' https://kylerjacobsonmedia.blob.core.windows.net;")
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "DENY")
