@@ -254,9 +254,9 @@ const PostCreationFrom = () => {
                             {media.map((file) => {
                                 return (
                                     <li>
-                                        {file.blob_name}{" "}
+                                        {file.name}{" "}
                                         <button
-                                            onClick={() => removeFile(file.id)}
+                                            onClick={() => removeFile(file.postId)}
                                             style={{ color: "red" }}
                                         >
                                             X

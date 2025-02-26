@@ -44,24 +44,19 @@ const ManageAccountForm = () => {
 
     const createAccount = async (accountDetails) => {
         try {
-            let role;
-            if (accountDetails.restricted === false) {
-                role = 0;
-            } else if (accountDetails.restricted && currentUser.role === 0) {
+            let role = 0;
+            if (accountDetails.restricted === true) {
                 role = -1;
-            } else {
-                role = currentUser.role;
             }
-            const updatedUser = await axios.put("/api/user", {
-                user: {
-                    id: currentUser.id,
-                    first_name: accountDetails.firstName,
-                    last_name: accountDetails.lastName,
-                    email: accountDetails.email,
-                    role: role,
-                    email_notification: accountDetails.emailNotification,
-                },
-                role: currentUser.role,
+            // Updated endpoint for Golang backend
+            const updatedUser = await axios.put("/api/user/"+ currentUser.id, {
+                id: currentUser.id,
+                firstName: accountDetails.firstName,
+                lastName: accountDetails.lastName,
+                email: accountDetails.email,
+                role: role,
+                emailNotification: accountDetails.emailNotification,
+                
             });
             if (updatedUser.status === 200) {
                 setShowSuccessMessage(true);
