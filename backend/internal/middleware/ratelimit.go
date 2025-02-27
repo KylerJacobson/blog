@@ -47,9 +47,9 @@ func (rl *RateLimiter) Limit(next http.HandlerFunc) http.HandlerFunc {
 		limiter := rl.GetLimiter(ip)
 
 		if !limiter.Allow() {
-			rl.logger.Sugar().Warnf("Rate limit exceeded for IP: %s", ip)
+			rl.logger.Sugar().Warnf("rate limit exceeded for IP: %s", ip)
 			w.Header().Set("Retry-After", "5")
-			httperr.Write(w, httperr.New(429, "Too Many Requests", "Please try again later"))
+			httperr.Write(w, httperr.New(http.StatusTooManyRequests, "too many requests", "please try again later"))
 			return
 		}
 
@@ -68,9 +68,9 @@ func (rl *RateLimiter) StrictLimit(next http.HandlerFunc) http.HandlerFunc {
 		limiter := rate.NewLimiter(rate.Limit(0.2), 3) // 1 request per 5 seconds, burst of 3
 
 		if !limiter.Allow() {
-			rl.logger.Sugar().Warnf("Strict rate limit exceeded for IP: %s", ip)
+			rl.logger.Sugar().Warnf("strict rate limit exceeded for IP: %s", ip)
 			w.Header().Set("Retry-After", "10")
-			httperr.Write(w, httperr.New(429, "Too Many Requests", "Please try again later"))
+			httperr.Write(w, httperr.New(http.StatusTooManyRequests, "too many requests", "please try again later"))
 			return
 		}
 

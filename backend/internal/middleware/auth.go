@@ -26,13 +26,13 @@ func (m *AuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := session.Manager.GetString(r.Context(), "session_token")
 		if token == "" {
-			m.logger.Sugar().Warn("Authentication failed: No token provided")
+			m.logger.Sugar().Warn("authentication failed: No token provided")
 			httperr.Write(w, httperr.Unauthorized("authentication required", ""))
 			return
 		}
 		_, err := m.authService.ParseToken(token)
 		if err != nil {
-			m.logger.Sugar().Warnf("Authentication failed: %v", err)
+			m.logger.Sugar().Warnf("authentication failed: %v", err)
 			httperr.Write(w, httperr.Unauthorized("invalid or expired token", ""))
 			return
 		}
@@ -47,13 +47,13 @@ func (m *AuthMiddleware) RequireAdmin(next http.HandlerFunc) http.HandlerFunc {
 
 		claims, err := m.authService.ParseToken(token)
 		if err != nil {
-			m.logger.Sugar().Warnf("Admin authorization failed: %v", err)
+			m.logger.Sugar().Warnf("admin authorization failed: %v", err)
 			httperr.Write(w, httperr.Unauthorized("authentication required", ""))
 			return
 		}
 
 		if claims.Role != 1 { // Consider using a constant for this
-			m.logger.Sugar().Warnf("Admin authorization failed: User %d has insufficient privileges", claims.Sub)
+			m.logger.Sugar().Warnf("admin authorization failed: User %d has insufficient privileges", claims.Sub)
 			httperr.Write(w, httperr.Forbidden("insufficient privileges", ""))
 			return
 		}
