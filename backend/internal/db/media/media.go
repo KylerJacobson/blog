@@ -29,7 +29,6 @@ func New(conn *pgxpool.Pool, logger logger.Logger) *mediaRepository {
 }
 
 func (repository *mediaRepository) GetMediaByPostId(postId int) ([]media_models.Post, error) {
-	repository.logger.Sugar().Infof("getting media for post %s from the database", postId)
 	rows, err := repository.conn.Query(
 		context.TODO(), `SELECT post_id, blob_name, content_type, created_at, restricted FROM media WHERE post_id = $1`, postId,
 	)
@@ -41,10 +40,10 @@ func (repository *mediaRepository) GetMediaByPostId(postId int) ([]media_models.
 	media, err := pgxV5.CollectRows(rows, pgxV5.RowToStructByName[media_models.Post])
 	if err != nil {
 		if errors.Is(err, pgxV5.ErrNoRows) {
-			repository.logger.Sugar().Infof("Media for post %d does not exist in the database", postId)
+			repository.logger.Sugar().Infof("media for post %d does not exist in the database", postId)
 			return []media_models.Post{}, nil
 		}
-		repository.logger.Sugar().Errorf("Error getting media for post %d: %v ", postId, err)
+		repository.logger.Sugar().Errorf("error getting media for post %d: %v ", postId, err)
 		return nil, err
 
 	}
@@ -56,11 +55,10 @@ func (repository *mediaRepository) UploadMedia(postId int, blobName, contentType
 		context.TODO(), `INSERT INTO media (post_id, blob_name, content_type, restricted) VALUES ($1, $2, $3, $4) RETURNING *`, postId, blobName, contentType, restricted,
 	)
 	if err != nil {
-		repository.logger.Sugar().Errorf("Error creating adding media to post %d : %v", postId, err)
+		repository.logger.Sugar().Errorf("error creating adding media to post %d : %v", postId, err)
 		return err
 	}
 	defer rows.Close()
-	repository.logger.Sugar().Infof("Created post media entry for post %d", postId)
 	return nil
 }
 
@@ -69,10 +67,9 @@ func (repository *mediaRepository) DeleteMediaByPostId(postId int) error {
 		context.TODO(), `DELETE FROM media WHERE post_id = $1`, postId,
 	)
 	if err != nil {
-		repository.logger.Sugar().Errorf("Error deleting media for post %d: %v", postId, err)
+		repository.logger.Sugar().Errorf("error deleting media for post %d: %v", postId, err)
 		return err
 	}
 	defer rows.Close()
-	repository.logger.Sugar().Infof("Deleted media for post %d", postId)
 	return nil
 }

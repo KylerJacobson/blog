@@ -53,7 +53,7 @@ func (u *usersApi) GetUserById(w http.ResponseWriter, r *http.Request) {
 	user, err := u.usersRepository.GetUserById(val)
 	if err != nil {
 		if errors.Is(err, pgxv5.ErrNoRows) {
-			u.logger.Sugar().Infof("User with id: %d does not exist in the database", val)
+			u.logger.Sugar().Infof("user with id: %d does not exist in the database", val)
 			httperr.Write(w, httperr.NotFound("User not found", ""))
 			return
 		}
@@ -79,15 +79,15 @@ func (u *usersApi) DeleteUserById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	val, err := strconv.Atoi(id)
 	if err != nil {
-		u.logger.Sugar().Errorf("Delete user parameter was not an integer: %v", err)
+		u.logger.Sugar().Errorf("delete user parameter was not an integer: %v", err)
 		httperr.Write(w, httperr.BadRequest("postId must be an integer", err.Error()))
 		return
 	}
 	err = u.usersRepository.DeleteUserById(val)
 	if err != nil {
 		if errors.Is(err, pgxv5.ErrNoRows) {
-			u.logger.Sugar().Infof("User with id: %d does not exist in the database", val)
-			httperr.Write(w, httperr.NotFound("User not found", ""))
+			u.logger.Sugar().Infof("user with id: %d does not exist in the database", val)
+			httperr.Write(w, httperr.NotFound("user not found", ""))
 			return
 		}
 		httperr.Write(w, httperr.Internal("failed to delete user", err.Error()))
@@ -100,15 +100,15 @@ func (u *usersApi) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var accountCreationRequest users.AccountCreationRequest
 	err := json.NewDecoder(r.Body).Decode(&accountCreationRequest)
 	if err != nil {
-		u.logger.Sugar().Errorf("Error decoding the user request body: %v", err)
-		httperr.Write(w, httperr.BadRequest("Invalid request body", err.Error()))
+		u.logger.Sugar().Errorf("error decoding the user request body: %v", err)
+		httperr.Write(w, httperr.BadRequest("invalid request body", err.Error()))
 		return
 	}
 
 	err = validateCreateUserRequest(accountCreationRequest.User)
 	if err != nil {
 		u.logger.Sugar().Errorf("error validating user create request", err)
-		httperr.Write(w, httperr.BadRequest("Invalid request body", err.Error()))
+		httperr.Write(w, httperr.BadRequest("invalid request body", err.Error()))
 		return
 	}
 
@@ -159,13 +159,13 @@ func (u *usersApi) LoginUser(w http.ResponseWriter, r *http.Request) {
 	var userLoginRequest users.UserLogin
 	err := json.NewDecoder(r.Body).Decode(&userLoginRequest)
 	if err != nil {
-		u.logger.Sugar().Errorf("Error decoding the user request body: %v", err)
+		u.logger.Sugar().Errorf("error decoding the user request body: %v", err)
 		httperr.Write(w, httperr.BadRequest("Invalid request body", err.Error()))
 		return
 	}
 	if userLoginRequest.Email == "" || userLoginRequest.Password == "" {
 		u.logger.Sugar().Errorf("error validating user login request: %v", err)
-		httperr.Write(w, httperr.BadRequest("Invalid request body", "email and password are required"))
+		httperr.Write(w, httperr.BadRequest("invalid request body", "email and password are required"))
 		return
 	}
 	user, err := u.usersRepository.LoginUser(userLoginRequest)
@@ -192,13 +192,13 @@ func (u *usersApi) ListUsers(w http.ResponseWriter, r *http.Request) {
 	allUsers, err := u.usersRepository.GetAllUsers()
 	if err != nil {
 		u.logger.Sugar().Errorf("error listing users: %v", err)
-		httperr.Write(w, httperr.Internal("failed to list users", err.Error()))
+		httperr.Write(w, httperr.Internal("failed to list users", ""))
 		return
 	}
 	b, err := json.Marshal(allUsers)
 	if err != nil {
 		u.logger.Sugar().Errorf("error marshalling the users list: %v", err)
-		httperr.Write(w, httperr.Internal("failed to list users", err.Error()))
+		httperr.Write(w, httperr.Internal("failed to list users", ""))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -209,26 +209,26 @@ func (u *usersApi) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var userUpdate users.UserUpdate
 	err := json.NewDecoder(r.Body).Decode(&userUpdate)
 	if err != nil {
-		u.logger.Sugar().Errorf("Error decoding the user request body: %v", err)
-		httperr.Write(w, httperr.BadRequest("Invalid request body", err.Error()))
+		u.logger.Sugar().Errorf("error decoding the user request body: %v", err)
+		httperr.Write(w, httperr.BadRequest("invalid request body", ""))
 		return
 	}
 
 	err = u.validateUpdateUserRequest(r, userUpdate)
 	if err != nil {
 		u.logger.Sugar().Errorf("error validating user update request: %v", err)
-		httperr.Write(w, httperr.BadRequest("Invalid request body", err.Error()))
+		httperr.Write(w, httperr.BadRequest("invalid request body", ""))
 		return
 	}
 
 	err = u.usersRepository.UpdateUser(userUpdate)
 	if err != nil {
 		if errors.Is(err, pgxv5.ErrNoRows) {
-			u.logger.Sugar().Infof("User with id: %s does not exist in the database", userUpdate.Id)
-			httperr.Write(w, httperr.NotFound("User not found", ""))
+			u.logger.Sugar().Infof("user with id: %s does not exist in the database", userUpdate.Id)
+			httperr.Write(w, httperr.NotFound("user not found", ""))
 			return
 		}
-		httperr.Write(w, httperr.Internal("failed to update user", err.Error()))
+		httperr.Write(w, httperr.Internal("failed to update user", ""))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -280,7 +280,7 @@ func (u *usersApi) validateUpdateUserRequest(r *http.Request, userUpdate users.U
 	id := r.PathValue("id")
 	userID, err := strconv.Atoi(id)
 	if err != nil {
-		u.logger.Sugar().Errorf("Update user parameter was not an integer: %v", err)
+		u.logger.Sugar().Errorf("update user parameter was not an integer: %v", err)
 		errors = append(errors, err)
 	}
 	token := session.Manager.GetString(r.Context(), "session_token")

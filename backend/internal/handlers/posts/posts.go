@@ -48,17 +48,14 @@ func New(postsRepo posts_repo.PostsRepository, usersRepo users_repo.UsersReposit
 func (p *postsApi) GetRecentPosts(w http.ResponseWriter, r *http.Request) {
 	posts, err := p.postsRepository.GetRecentPosts()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		p.logger.Sugar().Errorf("error getting all recent posts : %v", err)
+		httperr.Write(w, httperr.Internal("error getting all recent posts", ""))
 		return
 	}
 	b, err := json.Marshal(posts)
 	if err != nil {
 		p.logger.Sugar().Errorf("error unmarshalling recent posts : %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		httperr.Write(w, httperr.Internal("error getting all recent posts", ""))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -82,16 +79,14 @@ func (p *postsApi) GetPosts(w http.ResponseWriter, r *http.Request) {
 		posts, err = p.postsRepository.GetRecentPublicPosts()
 		if err != nil {
 			p.logger.Sugar().Errorf("error getting all recent public posts : %v", err)
-			httperr.Write(w, httperr.Internal("error getting all recent posts", ""))
+			httperr.Write(w, httperr.Internal("error getting all recent public posts", ""))
 			return
 		}
 	}
 	b, err := json.Marshal(posts)
 	if err != nil {
 		p.logger.Sugar().Errorf("error unmarshalling recent public posts : %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		httperr.Write(w, httperr.Internal("error getting posts", ""))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -125,7 +120,7 @@ func (p *postsApi) GetPostById(w http.ResponseWriter, r *http.Request) {
 	post, err := p.postsRepository.GetPostById(val)
 	if err != nil {
 		if errors.Is(err, v5.ErrNoRows) {
-			p.logger.Sugar().Warnf("Post %v does not exist in the database", val)
+			p.logger.Sugar().Warnf("post %d does not exist in the database", val)
 			httperr.Write(w, httperr.NotFound("post not found", ""))
 			return
 		}
@@ -134,7 +129,7 @@ func (p *postsApi) GetPostById(w http.ResponseWriter, r *http.Request) {
 	}
 	b, err := json.Marshal(post)
 	if err != nil {
-		p.logger.Sugar().Errorf("error unmarshalling post (%d) : %v", id, err)
+		p.logger.Sugar().Errorf("error unmarshalling post %d - %v", id, err)
 		httperr.Write(w, httperr.Internal("error getting post by id", ""))
 		return
 	}
@@ -153,7 +148,7 @@ func (p *postsApi) DeletePostById(w http.ResponseWriter, r *http.Request) {
 	err = p.postsRepository.DeletePostById(val)
 	if err != nil {
 		if errors.Is(err, v5.ErrNoRows) {
-			p.logger.Sugar().Warnf("Post %v does not exist in the database", val)
+			p.logger.Sugar().Warnf("post %d does not exist in the database", val)
 			httperr.Write(w, httperr.NotFound("post not found", ""))
 			return
 		}
@@ -173,10 +168,10 @@ func (p *postsApi) NotifyOnNewPost(post posts.PostRequestBody) error {
 		if post.Restricted && user.Role != 2 {
 			continue
 		}
-		p.logger.Sugar().Infof("Notifying user (%s) of new post", user.Email)
+		p.logger.Sugar().Infof("notifying user %s of new post", user.Email)
 		err := p.notifier.NewPost(user, post)
 		if err != nil {
-			p.logger.Sugar().Errorf("error notifying user (%s) of new post: %v", user.Email, err)
+			p.logger.Sugar().Errorf("error notifying user %s of new post: %v", user.Email, err)
 			return err
 		}
 	}
@@ -198,7 +193,7 @@ func (p *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error decoding the post request body: %v", err)
+		p.logger.Sugar().Errorf("error decoding the post request body: %v", err)
 		httperr.Write(w, httperr.Internal("error decoding post request body", ""))
 		return
 	}
@@ -249,7 +244,7 @@ func (p *postsApi) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
-		p.logger.Sugar().Errorf("Error decoding the post request body: %v", err)
+		p.logger.Sugar().Errorf("error decoding the post request body: %v", err)
 		httperr.Write(w, httperr.Internal("error decoding post request body", ""))
 		return
 	}

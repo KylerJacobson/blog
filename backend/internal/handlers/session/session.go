@@ -9,6 +9,7 @@ import (
 
 	"github.com/KylerJacobson/blog/backend/internal/api/types/users"
 	users_repo "github.com/KylerJacobson/blog/backend/internal/db/users"
+	"github.com/KylerJacobson/blog/backend/internal/httperr"
 	"github.com/KylerJacobson/blog/backend/logger"
 	"github.com/alexedwards/scs/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -53,18 +54,14 @@ func (sessionApi *sessionApi) CreateSession(w http.ResponseWriter, r *http.Reque
 	var userLoginFormRequest users.UserLoginForm
 	err := json.NewDecoder(r.Body).Decode(&userLoginFormRequest)
 	if err != nil {
-		sessionApi.logger.Sugar().Errorf("Error decoding the user request body: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		sessionApi.logger.Sugar().Errorf("error decoding the user request body: %v", err)
+		httperr.Write(w, httperr.BadRequest("error decoding the user request body", ""))
 		return
 	}
 	user, err := sessionApi.usersRepository.LoginUser(userLoginFormRequest.FormData)
 	if err != nil {
 		sessionApi.logger.Sugar().Errorf("error logging in user for %s : %v", userLoginFormRequest.FormData.Email, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		httperr.Write(w, httperr.Internal("error logging in user", ""))
 		return
 	}
 	if user == nil {
