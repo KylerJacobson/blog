@@ -74,9 +74,7 @@ func (m *mediaApi) GetMediaByPostId(w http.ResponseWriter, r *http.Request) {
 
 	media, err := m.mediaRepository.GetMediaByPostId(postId)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		b, _ := json.Marshal(err)
-		w.Write(b)
+		httperr.Write(w, httperr.Internal("internal server error", ""))
 		return
 	}
 	// TODO Add URL top postObject
@@ -139,16 +137,16 @@ func (m *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(MaxTotalUploadSize)
 	if err != nil {
 		if errors.Is(err, http.ErrNotMultipart) {
-			httperr.Write(w, httperr.BadRequest("Not a multipart request", "Use multipart/form-data encoding"))
+			httperr.Write(w, httperr.BadRequest("not a multipart request", "Use multipart/form-data encoding"))
 			return
 		}
 		if strings.Contains(err.Error(), "request body too large") {
-			httperr.Write(w, httperr.BadRequest("Request too large",
-				fmt.Sprintf("Maximum upload size is %d MB", MaxTotalUploadSize/(1<<20))))
+			httperr.Write(w, httperr.BadRequest("request too large",
+				fmt.Sprintf("maximum upload size is %d MB", MaxTotalUploadSize/(1<<20))))
 			return
 		}
-		m.logger.Sugar().Errorf("Error parsing form: %v", err)
-		httperr.Write(w, httperr.Internal("Error processing upload", ""))
+		m.logger.Sugar().Errorf("error parsing form: %v", err)
+		httperr.Write(w, httperr.Internal("error processing upload", ""))
 		return
 	}
 
@@ -185,7 +183,7 @@ func (m *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !AllowedFileTypes[fileType] {
-			m.logger.Sugar().Warnf("Invalid file type: %s for file %s", fileType, fileHeader.Filename)
+			m.logger.Sugar().Warnf("invalid file type: %s for file %s", fileType, fileHeader.Filename)
 			failedUploads++
 			continue
 		}
@@ -196,14 +194,14 @@ func (m *mediaApi) UploadMedia(w http.ResponseWriter, r *http.Request) {
 		err = m.azClient.UploadFileToBlob(fileHeader, blobName)
 		if err != nil {
 			failedUploads++
-			m.logger.Sugar().Errorf("Error uploading media: %v", err)
+			m.logger.Sugar().Errorf("error uploading media: %v", err)
 			httperr.Write(w, httperr.Internal("internal server error", ""))
 			return
 		}
 		err = m.mediaRepository.UploadMedia(postId, blobName, fileType, restricted)
 		if err != nil {
 			// TODO delete the blob since the database entry failed
-			m.logger.Sugar().Errorf("Error uploading media reference to database: %v", err)
+			m.logger.Sugar().Errorf("error uploading media reference to database: %v", err)
 			httperr.Write(w, httperr.Internal("internal server error", ""))
 			continue
 		}

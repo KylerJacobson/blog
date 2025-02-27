@@ -39,7 +39,6 @@ func (c *AzureClient) UploadFileToBlob(fileHeader *multipart.FileHeader, blobNam
 
 	blobClient := containerClient.NewBlockBlobClient(blobName)
 
-	c.logger.Sugar().Infof("Uploading a blob named %s\n", blobName)
 	_, err = blobClient.UploadStream(context.Background(), file, nil)
 	if err != nil {
 		return fmt.Errorf("error uploading to blob: %v", err)
