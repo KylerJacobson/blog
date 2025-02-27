@@ -236,23 +236,11 @@ func (u *usersApi) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *usersApi) GetUserFromSession(w http.ResponseWriter, r *http.Request) {
-	loggedIn := session.Manager.Exists(r.Context(), "session_token")
-	if !loggedIn {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-	token := session.Manager.GetString(r.Context(), "session_token")
-	claims, err := u.auth.ParseToken(token)
-	if err != nil {
-		u.logger.Sugar().Errorf("error parsing token: %v", err)
-		httperr.Write(w, httperr.Unauthorized("invalid or expired token", ""))
-		return
-	}
-
-	user, err := u.usersRepository.GetUserById(claims.Sub)
+	userID := session.Manager.GetInt(r.Context(), "user_id")
+	user, err := u.usersRepository.GetUserById(userID)
 	if err != nil {
 		if errors.Is(err, pgxv5.ErrNoRows) {
-			u.logger.Sugar().Infof("User with id: %d does not exist in the database", claims.Sub)
+			u.logger.Sugar().Infof("User with id: %d does not exist in the database", userID)
 			httperr.Write(w, httperr.NotFound("User not found", ""))
 			return
 		}
@@ -260,7 +248,7 @@ func (u *usersApi) GetUserFromSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user == nil {
-		u.logger.Sugar().Infof("user with id %d not found", claims.Sub)
+		u.logger.Sugar().Infof("user with id %d not found", userID)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -275,6 +263,7 @@ func (u *usersApi) GetUserFromSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *usersApi) validateUpdateUserRequest(r *http.Request, userUpdate users.UserUpdate) error {
+
 	// Check path value matches current userID
 	errors := []error{}
 	id := r.PathValue("id")
@@ -283,24 +272,20 @@ func (u *usersApi) validateUpdateUserRequest(r *http.Request, userUpdate users.U
 		u.logger.Sugar().Errorf("update user parameter was not an integer: %v", err)
 		errors = append(errors, err)
 	}
-	token := session.Manager.GetString(r.Context(), "session_token")
-	claims, err := u.auth.ParseToken(token)
-	if err != nil {
-		u.logger.Sugar().Errorf("error parsing token: %v", err)
-		errors = append(errors, err)
-	}
 
-	if claims.Sub != userID && claims.Role != 1 {
-		u.logger.Sugar().Errorf("user %d attempted to update user %d", claims.Sub, userID)
+	sessionUserID := session.Manager.GetInt(r.Context(), "user_id")
+	sessionRole := session.Manager.GetInt(r.Context(), "user_role")
+	if sessionUserID != userID && sessionRole != authorization.RoleAdmin {
+		u.logger.Sugar().Errorf("user %d attempted to update user %d", sessionUserID, userID)
 		errors = append(errors, err)
 	}
 
 	// Validate permission escalation / deescalation
-	if claims.Sub == authorization.RoleAdmin && userID == 1 && userUpdate.Role != authorization.RoleAdmin {
+	if sessionUserID == authorization.RoleAdmin && userID == sessionUserID && userUpdate.Role != authorization.RoleAdmin {
 		u.logger.Sugar().Errorf("user is already an admin, cannot decrease permission: %v", err)
 		errors = append(errors, err)
 	}
-	if claims.Role != 1 && userUpdate.Role == 1 {
+	if sessionRole != 1 && userUpdate.Role == 1 {
 		u.logger.Sugar().Errorf("access denied: %v", err)
 		errors = append(errors, err)
 	}
