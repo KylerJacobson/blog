@@ -180,18 +180,9 @@ func (p *postsApi) NotifyOnNewPost(post posts.PostRequestBody) error {
 
 func (p *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 
-	token := session.Manager.GetString(r.Context(), "session_token")
-
-	claims, err := p.auth.ParseToken(token)
-	if err != nil {
-		p.logger.Sugar().Errorf("error parsing token: %v", err)
-		httperr.Write(w, httperr.Unauthorized("invalid or expired token", ""))
-		return
-	}
-
+	userID := session.Manager.GetInt(r.Context(), "user_id")
 	var post post_models.FrontendPostRequest
-
-	err = json.NewDecoder(r.Body).Decode(&post)
+	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
 		p.logger.Sugar().Errorf("error decoding the post request body: %v", err)
 		httperr.Write(w, httperr.Internal("error decoding post request body", ""))
@@ -205,7 +196,7 @@ func (p *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postId, err := p.postsRepository.CreatePost(post.PostRequestBody, claims.Sub)
+	postId, err := p.postsRepository.CreatePost(post.PostRequestBody, userID)
 	if err != nil {
 		p.logger.Sugar().Errorf("error creating post (%s) : %v", post.Title, err)
 		httperr.Write(w, httperr.Internal("error creating post", ""))
@@ -225,15 +216,7 @@ func (p *postsApi) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *postsApi) UpdatePost(w http.ResponseWriter, r *http.Request) {
-	token := session.Manager.GetString(r.Context(), "session_token")
-
-	claims, err := p.auth.ParseToken(token)
-	if err != nil {
-		p.logger.Sugar().Errorf("error parsing token: %v", err)
-		httperr.Write(w, httperr.Unauthorized("invalid or expired token", ""))
-		return
-	}
-
+	userID := session.Manager.GetInt(r.Context(), "user_id")
 	var post post_models.FrontendPostRequest
 	id := r.PathValue("id")
 	postId, err := strconv.Atoi(id)
@@ -254,7 +237,7 @@ func (p *postsApi) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		httperr.Write(w, httperr.BadRequest("post was not formatted correctly", ""))
 		return
 	}
-	updatedPost, err := p.postsRepository.UpdatePost(post.PostRequestBody, postId, claims.Sub)
+	updatedPost, err := p.postsRepository.UpdatePost(post.PostRequestBody, postId, userID)
 	if err != nil {
 		p.logger.Sugar().Errorf("error updating post (%s) : %v", post.Title, err)
 		httperr.Write(w, httperr.Internal("error updating post", ""))
