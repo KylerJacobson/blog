@@ -42,12 +42,14 @@ func New(usersRepo users_repo.UsersRepository, logger logger.Logger) *sessionApi
 func Init() {
 	Manager = scs.New()
 	Manager.Lifetime = 3 * time.Hour
-	// Manager.IdleTimeout = 20 * time.Minute
-	// Manager.Cookie.Domain = "kylerjacobson.dev"
-	// Manager.Cookie.HttpOnly = true
-	// Manager.Cookie.Persist = true
-	// Manager.Cookie.SameSite = http.SameSiteStrictMode
-	// Manager.Cookie.Secure = true
+	Manager.IdleTimeout = 20 * time.Minute
+	Manager.Cookie.HttpOnly = true
+	Manager.Cookie.Persist = true
+	Manager.Cookie.Secure = true
+	if os.Getenv("ENVIRONMENT") == "prod" {
+		Manager.Cookie.Domain = "kylerjacobson.dev"
+		Manager.Cookie.SameSite = http.SameSiteStrictMode
+	}
 }
 
 func (sessionApi *sessionApi) CreateSession(w http.ResponseWriter, r *http.Request) {
@@ -69,29 +71,20 @@ func (sessionApi *sessionApi) CreateSession(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	iId, _ := strconv.Atoi(user.Id)
-
-	claims := UserClaim{
-		iId,
-		user.Role,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			Issuer:    "kylerjacobson.dev",
-		},
+	id, err := strconv.Atoi(user.Id)
+	if err != nil {
+		sessionApi.logger.Sugar().Errorf("error converting user id to int: %v", err)
+		httperr.Write(w, httperr.Internal("internal server error", ""))
+		return
 	}
 
-	// Sign and get the complete encoded token as a string using the secret
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	Manager.Put(r.Context(), "session_token", ss)
+	Manager.Put(r.Context(), "user_id", id)
+	Manager.Put(r.Context(), "user_role", user.Role)
+
 	w.WriteHeader(http.StatusOK)
-	b, _ := json.Marshal(ss)
-	w.Write(b)
-	return
 }
 
 func (sessionApi *sessionApi) DeleteSession(w http.ResponseWriter, r *http.Request) {
-	Manager.Put(r.Context(), "session_token", "")
+	Manager.Destroy(r.Context())
 	w.WriteHeader(http.StatusOK)
-	return
 }
