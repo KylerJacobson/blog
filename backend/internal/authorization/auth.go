@@ -2,14 +2,9 @@ package authorization
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"os"
-	"strings"
-	"time"
 
 	"github.com/KylerJacobson/blog/backend/internal/handlers/session"
-	"github.com/KylerJacobson/blog/backend/internal/httperr"
 	"github.com/KylerJacobson/blog/backend/logger"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -44,72 +39,10 @@ func NewAuthService(logger logger.Logger) *AuthService {
 	}
 }
 
-func (a *AuthService) VerifyToken(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("Authorization")
-	if strings.HasPrefix(token, "Bearer ") {
-		token = strings.TrimPrefix(token, "Bearer ")
-	}
-
-	claims, err := a.ParseToken(token)
-	if err != nil {
-		a.logger.Sugar().Warnf("Token verification failed: %v", err)
-		httperr.Write(w, httperr.Unauthorized("Invalid or expired token", ""))
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Token valid for user %d", claims.Sub)
-}
-
-func (a *AuthService) ParseToken(token string) (*UserClaim, error) {
-	if token == "" {
-		return nil, ErrInvalidToken
-	}
-
-	key := os.Getenv("JWT_SECRET")
-	if key == "" {
-		a.logger.Sugar().Error("JWT_SECRET environment variable not set")
-		return nil, ErrMissingJwtSecret
-	}
-
-	claims := &UserClaim{}
-	parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(key), nil
-	})
-
-	if err != nil {
-		a.logger.Sugar().Warnf("Error parsing token: %v", err)
-		return nil, ErrInvalidToken
-	}
-
-	if !parsedToken.Valid {
-		return nil, ErrInvalidToken
-	}
-
-	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
-		return nil, ErrExpiredToken
-	}
-
-	return claims, nil
-}
-
 func (a *AuthService) CheckPrivilege(r *http.Request) bool {
-	token := session.Manager.GetString(r.Context(), "session_token")
-	if token == "" {
-		return false
-	}
+	role := session.Manager.GetInt(r.Context(), "user_role")
 
-	claims, err := a.ParseToken(token)
-	if err != nil {
-		a.logger.Sugar().Warnf("Token verification failed during privilege check: %v", err)
-		return false
-	}
-
-	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
-		return false
-	}
-
-	if claims.Role == RoleAdmin || claims.Role == RolePrivileged {
+	if role == RoleAdmin || role == RolePrivileged {
 		return true
 	}
 	return false
