@@ -5,7 +5,7 @@ import CreateAccount from "./pages/CreateAccount";
 import CreatePost from "./pages/CreatePost";
 import AdminPanel from "./pages/AdminPanel";
 import Post from "./pages/Post";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
 import { useEffect, useState, useContext } from "react";
