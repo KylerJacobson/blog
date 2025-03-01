@@ -104,7 +104,6 @@ func main() {
 	mux.HandleFunc("DELETE /api/media/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.DeleteMediaByPostId)))))
 
 	// ---------------------------- Analytics ----------------------------
-	// Add the routes
 	// Route for recording page views (doesn't need authentication)
 	mux.HandleFunc("POST /api/analytics/pageview", am.SecurityHeaders(am.EnableCORS(rl.Limit(analyticsApi.RecordPageView))))
 
@@ -112,7 +111,7 @@ func main() {
 	mux.HandleFunc("GET /api/analytics/summary", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.GetSummary)))))
 
 	// Optional: Add a route for data retention/cleanup (admin only)
-	// mux.HandleFunc("POST /api/analytics/purge", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.PurgeOldData)))))
+	mux.HandleFunc("POST /api/analytics/purge", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.PurgeOldData)))))
 
 	// Serve static files from the React build directory
 	fs := http.FileServer(http.Dir("public"))

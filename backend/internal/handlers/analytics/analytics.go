@@ -73,8 +73,10 @@ func (a *analyticsApi) GetSummary(w http.ResponseWriter, r *http.Request) {
 	var since time.Time
 
 	switch rangeParam {
+	case "1d":
+		since = time.Now().AddDate(0, 0, -1)
 	case "30d":
-		since = time.Now().AddDate(0, -1, 0)
+		since = time.Now().AddDate(0, 0, -30)
 	case "all":
 		since = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	default: // "7d" or any other value
@@ -103,15 +105,33 @@ func (a *analyticsApi) GetSummary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	avgTimeOnSite, err := a.analyticsRepository.GetAverageTimeOnSite(since)
+	if err != nil {
+		a.logger.Sugar().Errorf("error getting average time on site: %v", err)
+		// Continue with the other data even if this fails
+		avgTimeOnSite = "0:00"
+	}
 	// Prepare the response
 	summary := analytics.AnalyticsSummary{
 		TotalViews:     totalViews,
 		UniqueVisitors: uniqueVisitors,
 		PathCounts:     pathCounts,
+		AvgTimeOnSite:  avgTimeOnSite,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(summary)
+}
+
+func (a *analyticsApi) PurgeOldData(w http.ResponseWriter, r *http.Request) {
+	err := a.analyticsRepository.PurgeOldData(time.Now().AddDate(0, 0, -90))
+	if err != nil {
+		a.logger.Sugar().Errorf("error purging old data: %v", err)
+		httperr.Write(w, httperr.Internal("error purging old data", ""))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // Helper function to get the client's IP address
