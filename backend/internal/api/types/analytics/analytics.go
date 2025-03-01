@@ -7,7 +7,7 @@ type PageView struct {
 	Path      string    `json:"path" db:"path"`
 	Referrer  string    `json:"referrer" db:"referrer"`
 	UserAgent string    `json:"userAgent" db:"user_agent"`
-	IP        string    `json:"ip" db:"ip"`
+	VisitorId string    `json:"visitorId" db:"visitor_id"`
 	Timestamp time.Time `json:"timestamp" db:"timestamp"`
 }
 
