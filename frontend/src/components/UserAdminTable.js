@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Container } from 'react-bootstrap';
 import axios from "axios";
 import convertUtcToLocal from "../helpers/helpers";
 
@@ -71,74 +72,77 @@ const UserAdminTable = () => {
         fetchUsers();
     }, []);
     return (
-        <table className="min-w-full bg-white border border-gray-300">
-            <thead>
-                <tr className="bg-gray-200 text-gray-600 uppercase text-sm">
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Notifications</th>
-                    <th>Account Creation Date</th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody className="text-gray-700">
-                {data?.map((user, index) => (
-                    <tr
-                        className={
-                            user.role === ROLE.REQUESTED
-                                ? "bg-yellow-200"
-                                : "even:bg-gray-200 odd:bg-gray-100 "
-                        }
-                        key={index}
-                    >
-                        <td>
-                            {user.firstName} {user.lastName}
-                        </td>
-                        <td>{user.email}</td>
-                        <td>{formatRole(user.role)}</td>
-                        <td>{user.emailNotification && "Enabled"}</td>
-                        <td>{convertUtcToLocal(user.createdAt)}</td>
-                        <td>
-                            {user.role !== ROLE.ADMIN && (
-                                <button
-                                    className="p-1 min-w-0 bg-aurora-green text-white text-xl rounded-md"
-                                    onClick={() =>
-                                        handleRequest(user, ROLE.PRIVILEGED)
-                                    }
-                                >
-                                    Approve
-                                </button>
-                            )}
-                        </td>
-                        <td>
-                            {user.role !== ROLE.ADMIN && (
-                                <button
-                                    className="p-1 min-w-0 bg-aurora-red text-white text-xl rounded-md"
-                                    onClick={() =>
-                                        handleRequest(user, ROLE.NON_PRIVILEGED)
-                                    }
-                                >
-                                    Deny
-                                </button>
-                            )}
-                        </td>
-                        <td>
-                            {user.role !== ROLE.ADMIN && (
-                                <button
-                                    className="p-1 min-w-0 bg-aurora-red text-white text-xl rounded-md"
-                                    onClick={() => deleteUser(user.id)}
-                                >
-                                    Delete User
-                                </button>
-                            )}
-                        </td>
+        <Container className="my-5">
+        <h1 className="mb-4">User Admin Panel</h1>
+            <table className="min-w-full bg-white border border-gray-300">
+                <thead>
+                    <tr className="bg-gray-200 text-gray-600 uppercase text-sm">
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Notifications</th>
+                        <th>Account Creation Date</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody className="text-gray-700">
+                    {data?.map((user, index) => (
+                        <tr
+                            className={
+                                user.role === ROLE.REQUESTED
+                                    ? "bg-yellow-200"
+                                    : "even:bg-gray-200 odd:bg-gray-100 "
+                            }
+                            key={index}
+                        >
+                            <td>
+                                {user.firstName} {user.lastName}
+                            </td>
+                            <td>{user.email}</td>
+                            <td>{formatRole(user.role)}</td>
+                            <td>{user.emailNotification && "Enabled"}</td>
+                            <td>{convertUtcToLocal(user.createdAt)}</td>
+                            <td>
+                                {user.role !== ROLE.ADMIN && (
+                                    <button
+                                        className="p-1 min-w-0 bg-aurora-green text-white text-xl rounded-md"
+                                        onClick={() =>
+                                            handleRequest(user, ROLE.PRIVILEGED)
+                                        }
+                                    >
+                                        Approve
+                                    </button>
+                                )}
+                            </td>
+                            <td>
+                                {user.role !== ROLE.ADMIN && (
+                                    <button
+                                        className="p-1 min-w-0 bg-aurora-red text-white text-xl rounded-md"
+                                        onClick={() =>
+                                            handleRequest(user, ROLE.NON_PRIVILEGED)
+                                        }
+                                    >
+                                        Deny
+                                    </button>
+                                )}
+                            </td>
+                            <td>
+                                {user.role !== ROLE.ADMIN && (
+                                    <button
+                                        className="p-1 min-w-0 bg-aurora-red text-white text-xl rounded-md"
+                                        onClick={() => deleteUser(user.id)}
+                                    >
+                                        Delete User
+                                    </button>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </Container>
     );
 };
 

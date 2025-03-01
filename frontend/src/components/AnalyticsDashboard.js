@@ -6,7 +6,7 @@ const AnalyticsDashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeRange, setTimeRange] = useState('7d'); // '7d', '30d', 'all'
+  const [timeRange, setTimeRange] = useState('1d'); // '1d', '7d', '30d', 'all'
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -32,6 +32,21 @@ const AnalyticsDashboard = () => {
     setTimeRange(e.target.value);
   };
 
+  const purgeAnalytics = async () => {
+    try {
+        const response = await axios.post(`/api/analytics/purge`, {
+            withCredentials: true,
+        });
+        if (response.status !== 200) {
+            console.error("Failed to purge analytics data");
+            alert("Failed to purge analytics data");
+        }
+    } catch (error) {
+        console.error("Failed to purge analytics data");
+        alert("Failed to purge analytics data");
+    }
+};
+
   if (loading) return <div className="text-center my-5">Loading analytics...</div>;
   if (error) return <div className="text-center my-5 text-aurora-red">{error}</div>;
 
@@ -45,11 +60,17 @@ const AnalyticsDashboard = () => {
           onChange={handleRangeChange}
           className="form-select w-auto"
         >
+          <option value="1d">Last 24 hours</option>
           <option value="7d">Last 7 days</option>
           <option value="30d">Last 30 days</option>
           <option value="all">All time</option>
         </select>
+        <div className="mt-3">
+          <button onClick={purgeAnalytics} className="btn btn-danger">Purge Old Analytics</button>
+        </div>
+       
       </div>
+      
 
       <Row>
         <Col md={4}>

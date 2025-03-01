@@ -15,4 +15,5 @@ type AnalyticsSummary struct {
 	TotalViews     int            `json:"totalViews"`
 	UniqueVisitors int            `json:"uniqueVisitors"`
 	PathCounts     map[string]int `json:"pathCounts"`
+	AvgTimeOnSite  string         `json:"avgTimeOnSite"`
 }
