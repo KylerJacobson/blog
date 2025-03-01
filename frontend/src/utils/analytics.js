@@ -1,6 +1,7 @@
 import { AuthContext } from '../contexts/AuthContext';
 import { useContext, useCallback } from 'react';
 
+
 // Create a hook version for components
 export const useAnalytics = () => {
   const { currentUser } = useContext(AuthContext);
@@ -35,6 +36,7 @@ export const useAnalytics = () => {
       console.error('Analytics error:', e);
     }
   }, [currentUser]); // This dependency is critical
+
   
   return { trackPageView };
 };
