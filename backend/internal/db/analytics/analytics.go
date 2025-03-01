@@ -33,9 +33,9 @@ func New(conn *pgxpool.Pool, logger logger.Logger) *analyticsRepository {
 func (repository *analyticsRepository) RecordPageView(pageView analytics.PageView) error {
 	_, err := repository.conn.Exec(
 		context.TODO(),
-		`INSERT INTO page_views (path, referrer, user_agent, ip, timestamp) 
+		`INSERT INTO page_views (path, referrer, user_agent, visitor_id, timestamp) 
 		VALUES ($1, $2, $3, $4, $5)`,
-		pageView.Path, pageView.Referrer, pageView.UserAgent, pageView.IP, time.Now(),
+		pageView.Path, pageView.Referrer, pageView.UserAgent, pageView.VisitorId, time.Now(),
 	)
 	if err != nil {
 		repository.logger.Sugar().Errorf("error recording page view: %v", err)

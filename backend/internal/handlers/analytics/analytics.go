@@ -34,8 +34,9 @@ func New(analyticsRepo analytics_repo.AnalyticsRepository, logger logger.Logger)
 func (a *analyticsApi) RecordPageView(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body
 	var pageViewRequest struct {
-		Path     string `json:"path"`
-		Referrer string `json:"referrer"`
+		Path      string `json:"path"`
+		Referrer  string `json:"referrer"`
+		VisitorId string `json:"visitorId"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&pageViewRequest)
@@ -51,7 +52,7 @@ func (a *analyticsApi) RecordPageView(w http.ResponseWriter, r *http.Request) {
 		Path:      pageViewRequest.Path,
 		Referrer:  pageViewRequest.Referrer,
 		UserAgent: r.UserAgent(),
-		IP:        hashIP(getClientIP(r)),
+		VisitorId: pageViewRequest.VisitorId,
 		Timestamp: time.Now(),
 	}
 

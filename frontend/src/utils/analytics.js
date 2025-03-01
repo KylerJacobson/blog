@@ -12,6 +12,13 @@ export const useAnalytics = () => {
       return;
     } 
     
+    // Get or create visitor ID
+    let visitorId = localStorage.getItem('visitorId');
+    if (!visitorId) {
+      visitorId = crypto.randomUUID(); // Or use a UUID library
+      localStorage.setItem('visitorId', visitorId);
+    }
+
     try {
       fetch('/api/analytics/pageview', {
         method: 'POST',
@@ -19,6 +26,7 @@ export const useAnalytics = () => {
         body: JSON.stringify({
           path: window.location.pathname,
           referrer: document.referrer || null,
+          visitorId: visitorId // Send the ID instead of relying on IP
         }),
       });
     } catch (e) {
