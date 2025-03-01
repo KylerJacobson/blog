@@ -5,15 +5,19 @@ import Footer from "../components/Footer";
 import Container from "react-bootstrap/Container";
 import "./Home.css";
 import { useAnalytics } from "../utils/analytics";
+import { AuthContext } from "../contexts/AuthContext";
 
 function SharedLayout() {
     const location = useLocation();
+    const { currentUser } = useContext(AuthContext);
     const { trackPageView } = useAnalytics();
-    // Track page views when location changes
+    // Track page views when location changes, but include currentUser in dependencies
     useEffect(() => {
-        trackPageView();
-    }, [location, trackPageView]);
-   
+        // Only track pageviews if currentUser has been loaded (could be null for logged out users)
+        if (currentUser !== undefined) {
+            trackPageView();
+        }
+    }, [location, trackPageView, currentUser]);
     return (
         <div className="d-flex flex-column min-vh-100">
             <Container className="mb-auto">
