@@ -16,6 +16,7 @@ type AnalyticsRepository interface {
 	GetPageViewsByPath(since time.Time) (map[string]int, error)
 	GetAverageTimeOnSite(since time.Time) (string, error)
 	PurgeOldData(before time.Time) error
+	PurgeAdminData(visitorID string) error
 }
 
 type analyticsRepository struct {
@@ -115,6 +116,19 @@ func (r *analyticsRepository) PurgeOldData(before time.Time) error {
 	)
 	if err != nil {
 		r.logger.Sugar().Errorf("error purging old data: %v", err)
+		return err
+	}
+	return nil
+}
+
+func (r *analyticsRepository) PurgeAdminData(visitorID string) error {
+	_, err := r.conn.Exec(
+		context.TODO(),
+		`DELETE FROM page_views WHERE visitor_id = $1`,
+		visitorID,
+	)
+	if err != nil {
+		r.logger.Sugar().Errorf("error purging admin data: %v", err)
 		return err
 	}
 	return nil

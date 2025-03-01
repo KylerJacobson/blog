@@ -110,8 +110,11 @@ func main() {
 	// Route for getting analytics summary (admin only)
 	mux.HandleFunc("GET /api/analytics/summary", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.GetSummary)))))
 
-	// Optional: Add a route for data retention/cleanup (admin only)
+	// Add a route for data retention/cleanup (admin only)
 	mux.HandleFunc("POST /api/analytics/purge", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.PurgeOldData)))))
+
+	// Add a route for removing admin data (admin only)
+	mux.HandleFunc("POST /api/analytics/admin-purge", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.PurgeAdminData)))))
 
 	// Serve static files from the React build directory
 	fs := http.FileServer(http.Dir("public"))
