@@ -37,14 +37,23 @@ const AnalyticsDashboard = () => {
         const response = await axios.post(`/api/analytics/purge`, {
             withCredentials: true,
         });
-        if (response.status !== 200) {
-            console.error("Failed to purge analytics data");
-            alert("Failed to purge analytics data");
-        }
     } catch (error) {
         console.error("Failed to purge analytics data");
         alert("Failed to purge analytics data");
     }
+};
+
+const purgeAdminAnalytics = async () => {
+  let visitorId = localStorage.getItem('visitorId');
+  try {
+      const response = await axios.post(`/api/analytics/admin-purge`, {
+          visitorId: visitorId,
+          withCredentials: true,
+      });
+  } catch (error) {
+      console.error("failed to purge analytics data");
+      alert("failed to purge analytics data");
+  }
 };
 
   if (loading) return <div className="text-center my-5">Loading analytics...</div>;
@@ -55,6 +64,13 @@ const AnalyticsDashboard = () => {
       <h1 className="mb-4">Blog Analytics</h1>
       
       <div className="mb-4">
+
+        <div className="mb-3">
+          <button onClick={purgeAnalytics} className="btn btn-danger">Purge Old Analytics</button>
+        </div>
+        <div className="mb-3">
+          <button onClick={purgeAdminAnalytics} className="btn btn-success">Purge Admin Analytics</button>
+        </div>
         <select 
           value={timeRange} 
           onChange={handleRangeChange}
@@ -65,10 +81,6 @@ const AnalyticsDashboard = () => {
           <option value="30d">Last 30 days</option>
           <option value="all">All time</option>
         </select>
-        <div className="mt-3">
-          <button onClick={purgeAnalytics} className="btn btn-danger">Purge Old Analytics</button>
-        </div>
-       
       </div>
       
 

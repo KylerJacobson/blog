@@ -17,6 +17,8 @@ import (
 type AnalyticsApi interface {
 	RecordPageView(w http.ResponseWriter, r *http.Request)
 	GetSummary(w http.ResponseWriter, r *http.Request)
+	PurgeOldData(w http.ResponseWriter, r *http.Request)
+	PurgeAdminData(w http.ResponseWriter, r *http.Request)
 }
 
 type analyticsApi struct {
@@ -128,7 +130,30 @@ func (a *analyticsApi) PurgeOldData(w http.ResponseWriter, r *http.Request) {
 	err := a.analyticsRepository.PurgeOldData(time.Now().AddDate(0, 0, -90))
 	if err != nil {
 		a.logger.Sugar().Errorf("error purging old data: %v", err)
-		httperr.Write(w, httperr.Internal("error purging old data", ""))
+		httperr.Write(w, httperr.Internal("internal server error", ""))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (a *analyticsApi) PurgeAdminData(w http.ResponseWriter, r *http.Request) {
+	// Get uuid from post body
+	var purgeRequest struct {
+		VisitorId string `json:"VisitorId" db:"visitor_id"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&purgeRequest)
+	if err != nil {
+		a.logger.Sugar().Errorf("error decoding purge request: %v", err)
+		httperr.Write(w, httperr.BadRequest("bad request", ""))
+		return
+	}
+
+	err = a.analyticsRepository.PurgeAdminData(purgeRequest.VisitorId)
+	if err != nil {
+		a.logger.Sugar().Errorf("error purging admin data: %v", err)
+		httperr.Write(w, httperr.Internal("internal server error", ""))
 		return
 	}
 
