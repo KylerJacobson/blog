@@ -62,7 +62,7 @@ func (r *analyticsRepository) GetUniqueVisitors(since time.Time) (int, error) {
 	var count int
 	err := r.conn.QueryRow(
 		context.TODO(),
-		`SELECT COUNT(DISTINCT ip) FROM page_views WHERE timestamp >= $1`,
+		`SELECT COUNT(DISTINCT visitor_id) FROM page_views WHERE timestamp >= $1`,
 		since,
 	).Scan(&count)
 	if err != nil {
@@ -121,36 +121,36 @@ func (r *analyticsRepository) PurgeOldData(before time.Time) error {
 }
 
 func (r *analyticsRepository) GetAverageTimeOnSite(since time.Time) (string, error) {
-	// This query calculates average session duration by grouping page views by IP and session
-	// A session is defined as a sequence of page views from the same IP with less than 30 minutes between views
+	// This query calculates average session duration by grouping page views by visitor_id and session
+	// A session is defined as a sequence of page views from the same visitor_id with less than 30 minutes between views
 	query := `
 		WITH sessions AS (
 			SELECT 
-				ip,
+				visitor_id,
 				timestamp,
 				-- This identifies the start of a new session (when gap > 30 minutes from previous view)
 				CASE WHEN
-					LAG(timestamp) OVER (PARTITION BY ip ORDER BY timestamp) IS NULL OR
-					timestamp - LAG(timestamp) OVER (PARTITION BY ip ORDER BY timestamp) > INTERVAL '30 minutes'
+					LAG(timestamp) OVER (PARTITION BY visitor_id ORDER BY timestamp) IS NULL OR
+					timestamp - LAG(timestamp) OVER (PARTITION BY visitor_id ORDER BY timestamp) > INTERVAL '30 minutes'
 				THEN 1 ELSE 0 END AS new_session
 			FROM page_views
 			WHERE timestamp >= $1
-			ORDER BY ip, timestamp
+			ORDER BY visitor_id, timestamp
 		),
 		session_groups AS (
 			SELECT 
-				ip,
+				visitor_id,
 				timestamp,
-				SUM(new_session) OVER (PARTITION BY ip ORDER BY timestamp) AS session_id
+				SUM(new_session) OVER (PARTITION BY visitor_id ORDER BY timestamp) AS session_id
 			FROM sessions
 		),
 		session_durations AS (
 			SELECT 
-				ip,
+				visitor_id,
 				session_id,
 				MAX(timestamp) - MIN(timestamp) AS duration
 			FROM session_groups
-			GROUP BY ip, session_id
+			GROUP BY visitor_id, session_id
 			-- Only consider sessions with at least 2 page views
 			HAVING COUNT(*) > 1
 		)
