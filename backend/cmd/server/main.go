@@ -12,11 +12,13 @@ import (
 	"github.com/KylerJacobson/blog/backend/internal/services/emailer"
 	"github.com/KylerJacobson/blog/backend/internal/services/notifications"
 
+	analytics_repo "github.com/KylerJacobson/blog/backend/internal/db/analytics"
 	"github.com/KylerJacobson/blog/backend/internal/db/config"
 
 	mediaRepo "github.com/KylerJacobson/blog/backend/internal/db/media"
 	postsRepo "github.com/KylerJacobson/blog/backend/internal/db/posts"
 	usersRepo "github.com/KylerJacobson/blog/backend/internal/db/users"
+	"github.com/KylerJacobson/blog/backend/internal/handlers/analytics"
 	"github.com/KylerJacobson/blog/backend/internal/handlers/media"
 	"github.com/KylerJacobson/blog/backend/internal/handlers/posts"
 	"github.com/KylerJacobson/blog/backend/internal/handlers/session"
@@ -66,6 +68,8 @@ func main() {
 	// Setup API handlers
 	usersRepo := usersRepo.New(dbPool, zapLogger)
 	postsRepo := postsRepo.New(dbPool, zapLogger)
+	analyticsRepo := analytics_repo.New(dbPool, zapLogger)
+	analyticsApi := analytics.New(analyticsRepo, zapLogger)
 	usersApi := users.New(usersRepo, authService, zapLogger)
 	postsApi := posts.New(postsRepo, usersRepo, notifier, authService, zapLogger)
 	sessionApi := session.New(usersRepo, zapLogger)
@@ -98,6 +102,16 @@ func main() {
 	mux.HandleFunc("POST /api/media", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.UploadMedia)))))
 	mux.HandleFunc("GET /api/media/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(mediaApi.GetMediaByPostId))))
 	mux.HandleFunc("DELETE /api/media/{id}", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(mediaApi.DeleteMediaByPostId)))))
+
+	// ---------------------------- Analytics ----------------------------
+	// Route for recording page views (doesn't need authentication)
+	mux.HandleFunc("POST /api/analytics/pageview", am.SecurityHeaders(am.EnableCORS(rl.Limit(analyticsApi.RecordPageView))))
+
+	// Route for getting analytics summary (admin only)
+	mux.HandleFunc("GET /api/analytics/summary", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.GetSummary)))))
+
+	// Optional: Add a route for data retention/cleanup (admin only)
+	mux.HandleFunc("POST /api/analytics/purge", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(analyticsApi.PurgeOldData)))))
 
 	// Serve static files from the React build directory
 	fs := http.FileServer(http.Dir("public"))
