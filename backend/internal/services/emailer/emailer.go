@@ -9,21 +9,18 @@ import (
 
 // EmailerService handles email composition and sending
 type EmailerService struct {
-	sender    EmailSender
-	factory   EmailFactory
+	client    EmailClient
 	fromEmail string
 	fromName  string
 }
 
 func NewEmailerService(
-	sender EmailSender,
-	factory EmailFactory,
+	client EmailClient,
 	fromEmail string,
 	fromName string,
 ) *EmailerService {
 	return &EmailerService{
-		sender:    sender,
-		factory:   factory,
+		client:    client,
 		fromEmail: fromEmail,
 		fromName:  fromName,
 	}
@@ -40,12 +37,7 @@ func (s *EmailerService) NewPostEmail(user users.User, post posts.PostRequestBod
 		HTMLContent: fmt.Sprintf("Hey %s, there is a new post on kylerjacobson.dev. Check out <a href=\"www.kylerjacobson.dev/signin\">%s</a>", user.FirstName, post.Title),
 	}
 
-	message, err := s.factory.CreateEmail(email)
-	if err != nil {
-		return fmt.Errorf("creating email: %w", err)
-	}
-
-	_, err = s.sender.Send(message)
+	err := s.client.Send(email)
 	if err != nil {
 		return fmt.Errorf("sending email: %w", err)
 	}
@@ -64,12 +56,7 @@ func (s *EmailerService) NewUserNotificationEmail(user users.User) error {
 		HTMLContent: "",
 	}
 
-	message, err := s.factory.CreateEmail(email)
-	if err != nil {
-		return fmt.Errorf("creating email: %w", err)
-	}
-
-	_, err = s.sender.Send(message)
+	err := s.client.Send(email)
 	if err != nil {
 		return fmt.Errorf("sending email: %w", err)
 	}

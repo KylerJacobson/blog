@@ -51,7 +51,7 @@ func main() {
 	sendGridClient := emailer.NewSendGridClient(apiKey)
 
 	// Setup notifications service
-	emailer := emailer.NewEmailerService(sendGridClient, &emailer.SendGridEmailFactory{}, "kyler@kylerjacobson.dev", "Kyler Jacobson")
+	emailer := emailer.NewEmailerService(sendGridClient, "kyler@kylerjacobson.dev", "Kyler Jacobson")
 	notifier := notifications.NewNotificationsService(emailer)
 
 	// Setup session manager

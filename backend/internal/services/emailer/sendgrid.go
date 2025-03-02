@@ -1,7 +1,7 @@
 package emailer
 
 import (
-	"github.com/sendgrid/rest"
+	"github.com/KylerJacobson/blog/backend/internal/httperr"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
@@ -19,16 +19,17 @@ func NewSendGridClient(apiKey string) *SendGridClient {
 }
 
 // Send implements EmailSender.Send for SendGrid
-func (s *SendGridClient) Send(email *mail.SGMailV3) (*rest.Response, error) {
-	return s.client.Send(email)
-}
-
-// SendGridEmailFactory implements EmailFactory for SendGrid
-type SendGridEmailFactory struct{}
-
-// CreateEmail implements EmailFactory.CreateEmail for SendGrid
-func (f *SendGridEmailFactory) CreateEmail(email Email) (*mail.SGMailV3, error) {
+func (s *SendGridClient) Send(email Email) error {
 	from := mail.NewEmail(email.FromName, email.FromEmail)
 	to := mail.NewEmail(email.ToName, email.ToEmail)
-	return mail.NewSingleEmail(from, email.Subject, to, email.PlainText, email.HTMLContent), nil
+	mail := mail.NewSingleEmail(from, email.Subject, to, email.PlainText, email.HTMLContent)
+
+	resp, err := s.client.Send(mail)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		return httperr.New(resp.StatusCode, "error sending email", "")
+	}
+	return nil
 }
