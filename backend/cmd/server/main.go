@@ -12,7 +12,7 @@ import (
 	"github.com/KylerJacobson/blog/backend/internal/services/emailer"
 	"github.com/KylerJacobson/blog/backend/internal/services/notifications"
 
-	analytics_repo "github.com/KylerJacobson/blog/backend/internal/db/analytics"
+	analyticsRepo "github.com/KylerJacobson/blog/backend/internal/db/analytics"
 	"github.com/KylerJacobson/blog/backend/internal/db/config"
 
 	mediaRepo "github.com/KylerJacobson/blog/backend/internal/db/media"
@@ -68,12 +68,14 @@ func main() {
 	// Setup API handlers
 	usersRepo := usersRepo.New(dbPool, zapLogger)
 	postsRepo := postsRepo.New(dbPool, zapLogger)
-	analyticsRepo := analytics_repo.New(dbPool, zapLogger)
+	analyticsRepo := analyticsRepo.New(dbPool, zapLogger)
+	mediaRepo := mediaRepo.New(dbPool, zapLogger)
+
 	analyticsApi := analytics.New(analyticsRepo, zapLogger)
 	usersApi := users.New(usersRepo, authService, zapLogger)
 	postsApi := posts.New(postsRepo, usersRepo, notifier, authService, zapLogger)
 	sessionApi := session.New(usersRepo, zapLogger)
-	mediaApi := media.New(mediaRepo.New(dbPool, zapLogger), authService, zapLogger, azureClient)
+	mediaApi := media.New(mediaRepo, authService, zapLogger, azureClient)
 
 	// ---------------------------- Posts ----------------------------
 	mux.HandleFunc("GET /api/posts", am.SecurityHeaders(am.EnableCORS(rl.Limit(postsApi.GetPosts))))
@@ -94,7 +96,6 @@ func main() {
 	mux.HandleFunc("GET /api/user/list", am.SecurityHeaders(am.EnableCORS(rl.Limit(am.RequireAdmin(usersApi.ListUsers)))))
 
 	// ---------------------------- Session ----------------------------
-
 	mux.HandleFunc("POST /api/session", am.SecurityHeaders(am.EnableCORS(rl.StrictLimit(sessionApi.CreateSession))))
 	mux.HandleFunc("DELETE /api/session", am.SecurityHeaders(am.EnableCORS(rl.Limit(sessionApi.DeleteSession))))
 
