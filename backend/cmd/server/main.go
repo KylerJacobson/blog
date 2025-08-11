@@ -121,7 +121,7 @@ func main() {
 	fs := http.FileServer(http.Dir("public"))
 
 	// Handle all non-API routes by serving the React app
-	mux.HandleFunc("GET /*", am.SecurityHeaders(am.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", am.SecurityHeaders(am.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
 		// Don't handle API routes here
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			http.NotFound(w, r)
