@@ -14,7 +14,7 @@ RUN npm run build
 # ------------------------------------------------------------------
 # Stage 2: Build the Go Backend
 # ------------------------------------------------------------------
-  FROM golang:1.22-alpine AS go-builder
+  FROM golang:1.23-alpine AS go-builder
 
   # Create a working directory for the Go application
   WORKDIR /backend
